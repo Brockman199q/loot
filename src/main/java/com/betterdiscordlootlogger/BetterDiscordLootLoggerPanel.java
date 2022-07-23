@@ -28,7 +28,7 @@ final JTextPane submitInfo = new JTextPane();
 final JTextField splitMembers = new JTextField();
 JPanel womPanel = new JPanel();
 JLabel lblGetGroupId = new JLabel();
-JComboBox groupComboBox = new JComboBox();
+JComboBox<Object> groupComboBox = new JComboBox<>();
 JComboBox memberList = new JComboBox();
 
 

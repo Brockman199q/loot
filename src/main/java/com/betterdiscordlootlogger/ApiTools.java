@@ -9,7 +9,11 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class ApiTools {
@@ -59,7 +63,7 @@ public static Object[] getGroupMembers ( int groupId ) throws IOException, Inter
 	OkHttpClient client = new OkHttpClient();
 	Request request = new Request.Builder().url( groupUrl ).build();
 	String responseBody = Objects.requireNonNull( client.newCall( request ).execute().body() ).string();
-	if ( ! responseBody.contains( "displayName" ) )
+	if ( ! responseBody.contains( "username" ) )
 		{
 		return null;
 		}
@@ -67,9 +71,13 @@ public static Object[] getGroupMembers ( int groupId ) throws IOException, Inter
 //        System.out.println(responseBody);
 //        System.out.println(Arrays.toString((IntStream.range(0, jsonArray.length())
 //                .mapToObj(index -> ((JSONObject) jsonArray.get(index)).optString("displayName")).sorted()).toArray()));
-	return (IntStream.range( 0, jsonArray.length() )
-	                 .mapToObj( index -> ((JSONObject) jsonArray.get( index )).optString( "displayName" ) )
-	                 .sorted()).toArray();
+	List<String> displayNames = (IntStream.range( 0, jsonArray.length() ).mapToObj(
+			index -> ((JSONObject) jsonArray.get( index )).optString( "displayName" ) ).sorted()).collect(
+			Collectors.toList() );
+	Comparator<String> comparator = Comparator.comparing( s -> Character.toLowerCase( s.charAt( 0 ) ) );
+	displayNames.sort( comparator.thenComparing( Comparator.naturalOrder() ) );
+	System.out.println( displayNames );
+	return displayNames.toArray( new String[0] );
 	}
 
 public static String getClanName ( int groupId ) throws IOException, InterruptedException
