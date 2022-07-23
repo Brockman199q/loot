@@ -39,7 +39,7 @@ ImageIcon icon = new ImageIcon();
 
 
 @SneakyThrows
-public BetterDiscordLootLoggerPanel ( BetterDiscordLootLoggerPlugin betterDiscordLootLoggerPlugin, Client client )
+BetterDiscordLootLoggerPanel ( BetterDiscordLootLoggerPlugin betterDiscordLootLoggerPlugin, Client client )
 	{
 	this.client = client;
 	setComponentOrientation( ComponentOrientation.LEFT_TO_RIGHT );
