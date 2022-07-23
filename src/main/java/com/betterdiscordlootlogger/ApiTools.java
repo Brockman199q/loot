@@ -1,15 +1,14 @@
 package com.betterdiscordlootlogger;
 
-import com.google.gson.Gson;
 import com.betterdiscordlootlogger.wiki.WikiItem;
 import com.betterdiscordlootlogger.wiseoldman.Groups;
+import com.google.gson.Gson;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -71,13 +70,10 @@ public static Object[] getGroupMembers ( int groupId ) throws IOException, Inter
 //        System.out.println(responseBody);
 //        System.out.println(Arrays.toString((IntStream.range(0, jsonArray.length())
 //                .mapToObj(index -> ((JSONObject) jsonArray.get(index)).optString("displayName")).sorted()).toArray()));
-	List<String> displayNames = (IntStream.range( 0, jsonArray.length() ).mapToObj(
-			index -> ((JSONObject) jsonArray.get( index )).optString( "displayName" ) ).sorted()).collect(
-			Collectors.toList() );
-	Comparator<String> comparator = Comparator.comparing( s -> Character.toLowerCase( s.charAt( 0 ) ) );
-	displayNames.sort( comparator.thenComparing( Comparator.naturalOrder() ) );
-	System.out.println( displayNames );
-	return displayNames.toArray( new String[0] );
+	//	System.out.println( displayNames );
+	return (IntStream.range( 0, jsonArray.length() )
+	                 .mapToObj( index -> ((JSONObject) jsonArray.get( index )).optString( "displayName" ) )
+	                 .sorted( String.CASE_INSENSITIVE_ORDER )).toArray( String[]::new );
 	}
 
 public static String getClanName ( int groupId ) throws IOException, InterruptedException
