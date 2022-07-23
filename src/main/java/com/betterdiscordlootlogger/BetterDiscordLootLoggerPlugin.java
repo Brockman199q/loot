@@ -69,7 +69,7 @@ import java.util.regex.Pattern;
 @PluginDescriptor(
         name = "Discord Split Tracker"
 )
-public class DiscordSplitTrackerPlugin extends Plugin {
+public class BetterDiscordLootLoggerPlugin extends Plugin {
     private static final String COLLECTION_LOG_TEXT = "New item added to your collection log: ";
 
     private static final Pattern KC_PATTERN = Pattern.compile("Your (?<pre>completion count for |subdued |completed )?(?<boss>.+?) (?<post>(?:(?:kill|harvest|lap|completion) )?(?:count )?)is: <col=ff0000>(?<kc>\\d+)</col>");
@@ -94,7 +94,7 @@ public class DiscordSplitTrackerPlugin extends Plugin {
     @Inject
     public Client client;
     @Inject
-    public DiscordSplitTrackerConfig config;
+    public BetterDiscordLootLoggerConfig config;
     @Inject
     public OkHttpClient okHttpClient;
     @Inject
@@ -115,7 +115,7 @@ public class DiscordSplitTrackerPlugin extends Plugin {
     private boolean notificationStarted;
     @Getter(AccessLevel.PACKAGE)
     @Setter(AccessLevel.PACKAGE)
-    private DiscordSplitTrackerPanel discordSplitTrackerPanel;
+    private BetterDiscordLootLoggerPanel betterDiscordLootLoggerPanel;
     @Inject
     private ItemManager itemManager;
 
@@ -151,7 +151,7 @@ public class DiscordSplitTrackerPlugin extends Plugin {
 
     @Override
     protected void startUp() throws Exception {
-        discordSplitTrackerPanel = new DiscordSplitTrackerPanel(this, client);
+        betterDiscordLootLoggerPanel = new BetterDiscordLootLoggerPanel(this, client);
 
         final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "balance.png");
 
@@ -159,7 +159,7 @@ public class DiscordSplitTrackerPlugin extends Plugin {
                 .tooltip("Split Tracker")
                 .icon(icon)
                 .priority(5)
-                .panel(discordSplitTrackerPanel)
+                .panel(betterDiscordLootLoggerPanel)
                 .build();
 
         clientToolbar.addNavigation(navButton);
@@ -198,7 +198,7 @@ public class DiscordSplitTrackerPlugin extends Plugin {
         }
         playerIconUrl = getPlayerIconUrl();
         colorCode = getColorCode();
-        CompletableFuture.runAsync(() -> discordSplitTrackerPanel.toggleRefreshButton());
+        CompletableFuture.runAsync(() -> betterDiscordLootLoggerPanel.toggleRefreshButton());
     }
 
 //    private final List<PartyMember> members = new ArrayList<>();
@@ -251,7 +251,7 @@ public class DiscordSplitTrackerPlugin extends Plugin {
                             } catch (IOException | InterruptedException e) {
                                 throw new RuntimeException(e);
                             }
-                            DiscordSplitTrackerPlugin.this.sendMessage(itemName, lastBossKC == -1 ? null : DiscordSplitTrackerPlugin.this.getKc(playerName, lastBossKill), npcName, Integer.toString(value), "NPC Loot", thumbnailUrl.get(), "", config.autoLog());
+                            BetterDiscordLootLoggerPlugin.this.sendMessage(itemName, lastBossKC == -1 ? null : BetterDiscordLootLoggerPlugin.this.getKc(playerName, lastBossKill), npcName, Integer.toString(value), "NPC Loot", thumbnailUrl.get(), "", config.autoLog());
                         });
                     }
                 }
@@ -455,8 +455,8 @@ public class DiscordSplitTrackerPlugin extends Plugin {
     }
 
     @Provides
-    DiscordSplitTrackerConfig provideConfig(ConfigManager configManager) {
-        return configManager.getConfig(DiscordSplitTrackerConfig.class);
+    BetterDiscordLootLoggerConfig provideConfig(ConfigManager configManager) {
+        return configManager.getConfig(BetterDiscordLootLoggerConfig.class);
     }
 
     public void sendMessage(String itemName, Integer bossKC, String npcName, String itemValue, String notificationType, String itemImageURL, String splitMembers, boolean send) {
@@ -597,8 +597,8 @@ public class DiscordSplitTrackerPlugin extends Plugin {
                     .addFormDataPart("payload_json", embedsObject);
 
             if (config.sendScreenshot()) {
-                if (!send && discordSplitTrackerPanel.before != null) {
-                    sendWebhookWithBuffer(url, requestBodyBuilder, discordSplitTrackerPanel.before);
+                if (!send && betterDiscordLootLoggerPanel.before != null) {
+                    sendWebhookWithBuffer(url, requestBodyBuilder, betterDiscordLootLoggerPanel.before);
                 } else {
                     sendWebhookWithScreenshot(url, requestBodyBuilder);
                 }
@@ -668,7 +668,7 @@ public class DiscordSplitTrackerPlugin extends Plugin {
     }
 
     public void dataToPanel(String bossName, String itemName) {
-        drawManager.requestNextFrameListener(image -> discordSplitTrackerPanel.panelOverride(bossName, itemName, (BufferedImage) image));
+        drawManager.requestNextFrameListener(image -> betterDiscordLootLoggerPanel.panelOverride(bossName, itemName, (BufferedImage) image));
     }
 
     private void resetState() {

@@ -31,7 +31,7 @@ import net.runelite.client.config.ConfigSection;
 
 
 @ConfigGroup("discordsplittracker")
-public interface DiscordSplitTrackerConfig extends Config {
+public interface BetterDiscordLootLoggerConfig extends Config {
     @ConfigSection(
             name = "Choose what to send",
             description = "Choose from the options below which events you would like to send",

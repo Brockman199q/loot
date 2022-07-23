@@ -20,7 +20,7 @@ import java.util.Objects;
 import static java.util.Objects.requireNonNull;
 
 @Slf4j
-public class DiscordSplitTrackerPanel extends PluginPanel {
+public class BetterDiscordLootLoggerPanel extends PluginPanel {
 
     final JTextField npcName = new JTextField();
     final JTextField itemName = new JTextField();
@@ -35,7 +35,7 @@ public class DiscordSplitTrackerPanel extends PluginPanel {
 
 
     @SneakyThrows
-    DiscordSplitTrackerPanel(DiscordSplitTrackerPlugin discordSplitTrackerPlugin, Client client) {
+    BetterDiscordLootLoggerPanel(BetterDiscordLootLoggerPlugin betterDiscordLootLoggerPlugin, Client client) {
         this.client = client;
         setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
         setBorder(null);
@@ -264,12 +264,12 @@ public class DiscordSplitTrackerPanel extends PluginPanel {
         reTakeScreenshot.setSize(new Dimension(1, 30));
         reTakeScreenshot.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
         reTakeScreenshot.setForeground(Color.WHITE);
-        reTakeScreenshot.addActionListener(e -> discordSplitTrackerPlugin.dataToPanel(npcName.getText(), itemName.getText()));
+        reTakeScreenshot.addActionListener(e -> betterDiscordLootLoggerPlugin.dataToPanel(npcName.getText(), itemName.getText()));
         submitLoot.addActionListener(e -> {
             if (!splitMembers.getText().contains("Split with") && !splitValue.getText().contains("Split Value") && !itemName.getText().contains("Item Name")) {
                 submitInfo.setFocusable(true);
                 try {
-                    discordSplitTrackerPlugin.sendMessage(itemName.getText(), null, npcName.getText(), splitValue.getText(), "Split Loot", ApiTools.getWikiIcon(itemName.getText()), splitMembers.getText(), false);
+                    betterDiscordLootLoggerPlugin.sendMessage(itemName.getText(), null, npcName.getText(), splitValue.getText(), "Split Loot", ApiTools.getWikiIcon(itemName.getText()), splitMembers.getText(), false);
                 } catch (IOException | InterruptedException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -283,7 +283,7 @@ public class DiscordSplitTrackerPanel extends PluginPanel {
                 submitInfo.setText("Could not get Item or Split Information. Please try again after receiving loot.");
                 submitInfo.setEditable(false);
             } else if (npcName.getText().equals("Boss/NPC Name") && itemName.getText().equals("Item Name") && splitMembers.getText().contains("Split with") || splitValue.getText().contains("Split Value")) {
-                discordSplitTrackerPlugin.sendMessage(itemName.getText(), null, "", "", "Manual Upload", "", "", false);
+                betterDiscordLootLoggerPlugin.sendMessage(itemName.getText(), null, "", "", "Manual Upload", "", "", false);
                 submitInfo.setText("Sent screenshot with the following:\nNPC name: " + npcName.getText() + "\nItem Name: " + itemName.getText());
                 npcName.setText("Boss/NPC Name");
                 itemName.setText("Item Name");
@@ -292,7 +292,7 @@ public class DiscordSplitTrackerPanel extends PluginPanel {
                 submitInfo.setVisible(true);
             } else {
                 try {
-                    discordSplitTrackerPlugin.sendMessage(itemName.getText(), null, npcName.getText(), "", "Manual Upload", ApiTools.getWikiIcon(itemName.getText()), "", false);
+                    betterDiscordLootLoggerPlugin.sendMessage(itemName.getText(), null, npcName.getText(), "", "Manual Upload", ApiTools.getWikiIcon(itemName.getText()), "", false);
                 } catch (IOException | InterruptedException ex) {
                     throw new RuntimeException(ex);
                 }
