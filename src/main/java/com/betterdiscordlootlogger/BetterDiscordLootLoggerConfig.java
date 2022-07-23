@@ -105,8 +105,8 @@ public interface BetterDiscordLootLoggerConfig extends Config {
 
     @ConfigItem(
             keyName = "bingo",
-            name = "Include Bingo String",
-            description = "Add a bingo string to your screenshot's message",
+            name = "Include Bingo/Event String",
+            description = "Add an event string to your screenshot's message",
             position = 6
     )
     default boolean includeBingo() {
