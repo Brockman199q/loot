@@ -1,13 +1,21 @@
-# Better Discord Loot Logger
-This plugin will take a screenshot (optionally) and send that along with a message via a discord webhook anytime you get a pet, valuable drop, raid item or collection log slot.
+# Discord Split Tracker
+Not just another loot logger! I developed this originally with the goal of adding KC data to an existing loot logger, but decided to implement some other new features that are geared toward clans and group content. Credit and a huge thanks goes to RinzZJ for the original repo, and his work on the "better discord loot logger" plugin, as well as to MasterKenth and the developers of the "discord rare drop notificator" plugin for the inspiration to create this one.
 
-Main reason for making this over using any other one out there is that none of the others seemed to have support for collection log items.
 
-### Setup
-To set this up find the discord channel you want the notifications to go to and click the settings icon -> integrations -> webhooks -> New Webhook
-Then copy and paste this webhook into the input field in the plugin and that's it!
+## Retains original functionality as an automatic loot logger with some key distinctions:
+- Side Panel for manual loot submissions
+  - Simply set a valuable drop threshold, and open the panel when you get a drop worth sharing, it will pre-populate with item/npc information and a screenshot of the most recent valuable drop
+    - Wise Old Man API Integration to list out all members in your Clan/Group and add them to the Split Submission
+    - Particularly useful in clans and alongside specialized Discord bots (will update here when the partner JDA project by TheDyldozer is complete and interfaces seamlessly with this plugin)
+    - Prompt for split information if applicable, which will display to track with your clan or friend group
+    - Configuration available for Bingo and Event strings to prevent fraudulent activity in clan events
+    - Can set a custom field such as "Clan: <clan name>", "Group", etc. to display in your Discord WebHook messages
 
-### Changelog
-- **4/6/22 (1.1)**  
-  - **Improvement** - Screenshots of collection log entries will now be taken when the popup appears if it is enabled.
-  - **New** - Added raid loot option that will include the item name, raid type (tob/cox/hard mode etc) and kill count in the message.
+
+- Automatic Discord WebHook output just like any other loot logger, but in a format that I thought was more appealing
+  - First of its kind to show realtime KC information on each valuable boss drop
+  - Also queries the OSRS wiki to show an item icon and an image of the npc you fought, if applicable
+    - Credit to the Discord Rare Drop Notificator for the idea for this, and the playeraccounttype switch to show ironman helmets
+  - Raids loot logging is still experimental, priority for the time being is the split tracking functionality
+
+## Forked from https://github.com/RinZJ/better-discord-loot-logger

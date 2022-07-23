@@ -10,21 +10,32 @@ repositories {
 	mavenCentral()
 }
 
-def runeLiteVersion = '1.8.26'
+def runeLiteVersion = '1.8.28'
 
 dependencies {
-	compileOnly group: 'net.runelite', name:'client', version: runeLiteVersion
+	implementation('com.google.apis:google-api-services-sheets:v4-rev581-1.25.0')
+			{
+				exclude group: 'com.google.guava'
+				exclude group: 'com.google.oauth-client'
+				exclude group: 'org.apache.httpcomponents'
+				exclude group: 'org.apache.commons'
+				exclude group: 'org.apache'
+				exclude group: 'commons-logging'
+				exclude group: 'commons-codec'
+			}
+	implementation 'org.json:json:20200518'
+    compileOnly group: 'net.runelite', name:'client', version: runeLiteVersion
 
 	compileOnly 'org.projectlombok:lombok:1.18.20'
 	annotationProcessor 'org.projectlombok:lombok:1.18.20'
 
-	testImplementation 'junit:junit:4.13.2'
+	testImplementation 'junit:junit:4.12'
 	testImplementation group: 'net.runelite', name:'client', version: runeLiteVersion
 	testImplementation group: 'net.runelite', name:'jshell', version: runeLiteVersion
 }
 
-group = 'com.betterdiscordlootlogger'
-version = '1.2'
+group = 'com.handie.splittracker'
+version = '1.0-SNAPSHOT'
 sourceCompatibility = '1.8'
 
 tasks.withType(JavaCompile) {
