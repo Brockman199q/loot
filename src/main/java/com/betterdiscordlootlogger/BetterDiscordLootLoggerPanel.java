@@ -14,15 +14,9 @@ import java.awt.event.FocusListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 
 import static com.betterdiscordlootlogger.ApiTools.*;
 import static java.util.Objects.requireNonNull;
-import static java.util.concurrent.TimeUnit.HOURS;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 public class BetterDiscordLootLoggerPanel extends PluginPanel {
@@ -32,11 +26,14 @@ final JTextField itemName = new JTextField();
 final JLabel thumbnail = new JLabel();
 final JTextPane submitInfo = new JTextPane();
 final JTextField splitMembers = new JTextField();
+JPanel womPanel = new JPanel();
+JLabel lblGetGroupId = new JLabel();
+JComboBox groupComboBox = new JComboBox();
+JComboBox memberList = new JComboBox();
+
 
 private final Client client;
 public BufferedImage before;
-
-private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool( 1 );
 
 ImageIcon icon = new ImageIcon();
 
@@ -437,231 +434,139 @@ public BufferedImage scaleImage ( BufferedImage screenshot, int width, int heigh
 
 public void buildWomPanel ()
 	{
-	SwingUtilities.invokeLater( () ->
+	SwingUtilities.invokeLater( this::runBuilder );
+	}
+
+private void runBuilder ()
+	{
+	JPanel womPanel = new JPanel();
+	womPanel.setFont( new Font( "RuneScape", Font.PLAIN, 13 ) );
+	womPanel.setBorder( null );
+	womPanel.setBackground( new Color( 30, 30, 30 ) );
+	womPanel.setAlignmentY( 0.0f );
+	GridBagConstraints gbc_womPanel = new GridBagConstraints();
+	gbc_womPanel.anchor = GridBagConstraints.NORTH;
+	gbc_womPanel.insets = new Insets( 8, 8, 8, 8 );
+	gbc_womPanel.fill = GridBagConstraints.HORIZONTAL;
+	gbc_womPanel.gridx = 0;
+	gbc_womPanel.gridy = 3;
+	add( womPanel, gbc_womPanel );
+	GridBagLayout gbl_womPanel = new GridBagLayout();
+	gbl_womPanel.columnWidths = new int[] {158, 0, 0};
+	gbl_womPanel.rowHeights = new int[] {45, 0, 35, 0};
+	gbl_womPanel.columnWeights = new double[] {1.0, 0.0, Double.MIN_VALUE};
+	gbl_womPanel.rowWeights = new double[] {0.0, 0.0, 0.0, Double.MIN_VALUE};
+	womPanel.setLayout( gbl_womPanel );
+	JLabel lblWiseOldMan = new JLabel();
+	lblWiseOldMan.setText( "WiseOldMan" );
+	lblWiseOldMan.setHorizontalTextPosition( SwingConstants.CENTER );
+	lblWiseOldMan.setHorizontalAlignment( SwingConstants.CENTER );
+	lblWiseOldMan.setForeground( Color.WHITE );
+	lblWiseOldMan.setFont( new Font( "RuneScape", Font.BOLD, 18 ) );
+	lblWiseOldMan.setComponentOrientation( ComponentOrientation.LEFT_TO_RIGHT );
+	lblWiseOldMan.setBorder( new EmptyBorder( 4, 0, 4, 0 ) );
+	GridBagConstraints gbc_lblWiseOldMan = new GridBagConstraints();
+	gbc_lblWiseOldMan.gridwidth = 2;
+	gbc_lblWiseOldMan.fill = GridBagConstraints.HORIZONTAL;
+	gbc_lblWiseOldMan.anchor = GridBagConstraints.SOUTH;
+	gbc_lblWiseOldMan.insets = new Insets( 8, 0, 5, 5 );
+	gbc_lblWiseOldMan.gridx = 0;
+	gbc_lblWiseOldMan.gridy = 0;
+	womPanel.add( lblWiseOldMan, gbc_lblWiseOldMan );
+	JLabel lblGetGroupId = new JLabel( "Get List of Members by Group ID:" );
+	lblGetGroupId.setForeground( Color.WHITE );
+	GridBagConstraints gbc_lblGetGroupId = new GridBagConstraints();
+	gbc_lblGetGroupId.gridwidth = 2;
+	gbc_lblGetGroupId.insets = new Insets( 0, 0, 5, 5 );
+	gbc_lblGetGroupId.gridx = 0;
+	gbc_lblGetGroupId.gridy = 1;
+	womPanel.add( lblGetGroupId, gbc_lblGetGroupId );
+	JComboBox<Object> groupComboBox = new JComboBox<>();
+	GridBagConstraints gbc_groupComboBox = new GridBagConstraints();
+	gbc_groupComboBox.fill = GridBagConstraints.HORIZONTAL;
+	gbc_groupComboBox.insets = new Insets( 4, 4, 5, 4 );
+	gbc_groupComboBox.gridx = 0;
+	gbc_groupComboBox.gridy = 2;
+	womPanel.add( groupComboBox, gbc_groupComboBox );
+	JButton btnRefresh = new JButton( "Refresh" );
+	btnRefresh.setForeground( Color.WHITE );
+	btnRefresh.setComponentOrientation( ComponentOrientation.LEFT_TO_RIGHT );
+	GridBagConstraints gbc_btnRefresh = new GridBagConstraints();
+	gbc_btnRefresh.insets = new Insets( 4, 4, 5, 4 );
+	gbc_btnRefresh.gridx = 1;
+	gbc_btnRefresh.gridy = 2;
+	womPanel.add( btnRefresh, gbc_btnRefresh );
+	JComboBox<Object> memberList = new JComboBox<>();
+	GridBagConstraints gbc_memberList = new GridBagConstraints();
+	gbc_memberList.insets = new Insets( 4, 4, 5, 4 );
+	gbc_memberList.fill = GridBagConstraints.BOTH;
+	gbc_memberList.gridx = 0;
+	gbc_memberList.gridy = 3;
+	memberList.setForeground( Color.WHITE );
+	womPanel.add( memberList, gbc_memberList );
+	JButton btnAddMember = new JButton( "Add to Split" );
+	GridBagConstraints gbc_btnAddMember = new GridBagConstraints();
+	gbc_btnAddMember.gridx = 1;
+	gbc_btnAddMember.gridy = 3;
+	btnAddMember.setForeground( Color.WHITE );
+	womPanel.add( btnAddMember, gbc_btnAddMember );
+	refreshPanel( womPanel, groupComboBox, memberList, lblGetGroupId );
+	btnRefresh.addActionListener( e ->
 		{
-		JPanel womPanel = new JPanel();
-		if ( ! (client.getLocalPlayer().getModelHeight() >= 0) )
+		try
 			{
-			System.out.println( "noob" );
+			int groupIndex = groupComboBox.getSelectedIndex();
+			int groupId = Integer.parseInt( String.valueOf( (groupComboBox.getSelectedItem()) ) );
+			memberList.removeAllItems();
+			memberList.setModel( new DefaultComboBoxModel<>( Objects.requireNonNull( getGroupMembers( groupId ) ) ) );
+			groupComboBox.removeAllItems();
+			groupComboBox.setModel( new DefaultComboBoxModel<>(
+					requireNonNull( getWomGroupIds( requireNonNull( client.getLocalPlayer().getName() ) ) ) ) );
+			String clanName = getClanName( groupId );
+			lblGetGroupId.setText( clanName );
+			groupComboBox.setSelectedIndex( groupIndex );
+			btnRefresh.setText( "Search" );
 			}
+		catch (IOException | InterruptedException ex)
+			{
+			throw new RuntimeException( ex );
+			}
+		} );
+	btnAddMember.addActionListener( e ->
+		{
+		if ( splitMembers.getText().contains( "Split with" ) )
+			{splitMembers.setText( requireNonNull( memberList.getSelectedItem() ).toString() );}
 		else
 			{
-			womPanel.setFont( new Font( "RuneScape", Font.PLAIN, 13 ) );
-			womPanel.setBorder( null );
-			womPanel.setBackground( new Color( 30, 30, 30 ) );
-			womPanel.setAlignmentY( 0.0f );
-			GridBagConstraints gbc_womPanel = new GridBagConstraints();
-			gbc_womPanel.anchor = GridBagConstraints.NORTH;
-			gbc_womPanel.insets = new Insets( 8, 8, 8, 8 );
-			gbc_womPanel.fill = GridBagConstraints.HORIZONTAL;
-			gbc_womPanel.gridx = 0;
-			gbc_womPanel.gridy = 3;
-			add( womPanel, gbc_womPanel );
-			GridBagLayout gbl_womPanel = new GridBagLayout();
-			gbl_womPanel.columnWidths = new int[] {158, 0, 0};
-			gbl_womPanel.rowHeights = new int[] {45, 0, 35, 0};
-			gbl_womPanel.columnWeights = new double[] {1.0, 0.0, Double.MIN_VALUE};
-			gbl_womPanel.rowWeights = new double[] {0.0, 0.0, 0.0, Double.MIN_VALUE};
-			womPanel.setLayout( gbl_womPanel );
-			
-			JLabel lblWiseOldMan = new JLabel();
-			lblWiseOldMan.setText( "WiseOldMan" );
-			lblWiseOldMan.setHorizontalTextPosition( SwingConstants.CENTER );
-			lblWiseOldMan.setHorizontalAlignment( SwingConstants.CENTER );
-			lblWiseOldMan.setForeground( Color.WHITE );
-			lblWiseOldMan.setFont( new Font( "RuneScape", Font.BOLD, 18 ) );
-			lblWiseOldMan.setComponentOrientation( ComponentOrientation.LEFT_TO_RIGHT );
-			lblWiseOldMan.setBorder( new EmptyBorder( 4, 0, 4, 0 ) );
-			GridBagConstraints gbc_lblWiseOldMan = new GridBagConstraints();
-			gbc_lblWiseOldMan.gridwidth = 2;
-			gbc_lblWiseOldMan.fill = GridBagConstraints.HORIZONTAL;
-			gbc_lblWiseOldMan.anchor = GridBagConstraints.SOUTH;
-			gbc_lblWiseOldMan.insets = new Insets( 8, 0, 5, 5 );
-			gbc_lblWiseOldMan.gridx = 0;
-			gbc_lblWiseOldMan.gridy = 0;
-			womPanel.add( lblWiseOldMan, gbc_lblWiseOldMan );
-			
-			JLabel lblGetGroupId = new JLabel( "Get List of Members by Group ID:" );
-			lblGetGroupId.setForeground( Color.WHITE );
-			GridBagConstraints gbc_lblGetGroupId = new GridBagConstraints();
-			gbc_lblGetGroupId.gridwidth = 2;
-			gbc_lblGetGroupId.insets = new Insets( 0, 0, 5, 5 );
-			gbc_lblGetGroupId.gridx = 0;
-			gbc_lblGetGroupId.gridy = 1;
-			womPanel.add( lblGetGroupId, gbc_lblGetGroupId );
-			JComboBox<Object> groupComboBox = new JComboBox<>();
-			GridBagConstraints gbc_groupComboBox = new GridBagConstraints();
-			gbc_groupComboBox.fill = GridBagConstraints.HORIZONTAL;
-			gbc_groupComboBox.insets = new Insets( 4, 4, 5, 4 );
-			gbc_groupComboBox.gridx = 0;
-			gbc_groupComboBox.gridy = 2;
-			womPanel.add( groupComboBox, gbc_groupComboBox );
-			JButton btnRefresh = new JButton( "Refresh" );
-			btnRefresh.setForeground( Color.WHITE );
-			btnRefresh.setComponentOrientation( ComponentOrientation.LEFT_TO_RIGHT );
-			GridBagConstraints gbc_btnRefresh = new GridBagConstraints();
-			gbc_btnRefresh.insets = new Insets( 4, 4, 5, 4 );
-			gbc_btnRefresh.gridx = 1;
-			gbc_btnRefresh.gridy = 2;
-			womPanel.add( btnRefresh, gbc_btnRefresh );
-			groupComboBox.removeAllItems();
-			JComboBox<Object> memberList = new JComboBox<>();
-			memberList.removeAllItems();
-			btnRefresh.addActionListener( f ->
+			if ( splitMembers.getText().contains( (CharSequence) requireNonNull( memberList.getSelectedItem() ) ) )
 				{
-				try
-					{
-					Runnable getGroups = () ->
-						{
-						try
-							{
-							requireNonNull( getWomGroupId( requireNonNull( client.getLocalPlayer().getName() ) ) );
-							}
-						catch (IOException | InterruptedException e)
-							{
-							throw new RuntimeException( e );
-							}
-						};
-					ScheduledFuture<?> groupHandler = scheduler.schedule( getGroups, 0, SECONDS );
-					Runnable canceller = () -> groupHandler.cancel( true );
-					groupComboBox.setModel( new DefaultComboBoxModel<>(
-							requireNonNull( getWomGroupId( requireNonNull( client.getLocalPlayer().getName() ) ) ) ) );
-					groupComboBox.setSelectedIndex( 0 );
-					btnRefresh.setText( "Search" );
-					memberList.setModel( new DefaultComboBoxModel<>( requireNonNull( ApiTools.getGroupMembers(
-							Integer.parseInt( requireNonNull(
-									(CharSequence) groupComboBox.getSelectedItem() ).toString() ) ) ) ) );
-					lblGetGroupId.setText( "Got members for " + getClanName(
-							Integer.parseInt( requireNonNull( groupComboBox.getSelectedItem() ).toString() ) ) );
-					groupHandler.cancel( true );
-					}
-				catch (IOException | InterruptedException ex)
-					{
-					throw new RuntimeException( ex );
-					}
-				groupComboBox.setSelectedIndex( 0 );
-				
-				btnRefresh.addActionListener( g ->
-					{
-					try
-						{
-						lblGetGroupId.setText( "Got members for " + getClanName(
-								Integer.parseInt( requireNonNull( groupComboBox.getSelectedItem() ).toString() ) ) );
-						memberList.setModel( new DefaultComboBoxModel<>( requireNonNull( getGroupMembers(
-								Integer.parseInt( requireNonNull(
-										(CharSequence) groupComboBox.getSelectedItem() ).toString() ) ) ) ) );
-						}
-					catch (IOException | InterruptedException ex)
-						{
-						throw new RuntimeException( ex );
-						}
-					memberList.setSelectedIndex( 0 );
-					GridBagConstraints gbc_memberList = new GridBagConstraints();
-					gbc_memberList.insets = new Insets( 4, 4, 5, 4 );
-					gbc_memberList.fill = GridBagConstraints.BOTH;
-					gbc_memberList.gridx = 0;
-					gbc_memberList.gridy = 3;
-					memberList.setForeground( Color.WHITE );
-					womPanel.add( memberList, gbc_memberList );
-					JButton btnAddMember = new JButton( "Add to Split" );
-					GridBagConstraints gbc_btnAddMember = new GridBagConstraints();
-					gbc_btnAddMember.gridx = 1;
-					gbc_btnAddMember.gridy = 3;
-					btnAddMember.setForeground( Color.WHITE );
-					womPanel.add( btnAddMember, gbc_btnAddMember );
-					btnAddMember.addActionListener( h ->
-						{
-						if ( splitMembers.getText().contains( "Split with" ) )
-							{splitMembers.setText( requireNonNull( memberList.getSelectedItem() ).toString() );}
-						else
-							{
-							if ( splitMembers.getText().contains(
-									(CharSequence) requireNonNull( memberList.getSelectedItem() ) ) )
-								{
-								return;
-								}
-							splitMembers.setText(
-									splitMembers.getText() + ", " + requireNonNull( memberList.getSelectedItem() ) );
-							}
-						} );
-					womPanel.revalidate();
-					womPanel.repaint();
-					
-					} );
-				try
-					{
-					groupComboBox.setModel( new DefaultComboBoxModel<>(
-							requireNonNull( getWomGroupId( requireNonNull( client.getLocalPlayer().getName() ) ) ) ) );
-					btnRefresh.setText( "Search" );
-					memberList.setModel( new DefaultComboBoxModel<>( requireNonNull( getGroupMembers( Integer.parseInt(
-							requireNonNull( (CharSequence) groupComboBox.getSelectedItem() ).toString() ) ) ) ) );
-					lblGetGroupId.setText( "Got members for " + getClanName(
-							Integer.parseInt( requireNonNull( groupComboBox.getSelectedItem() ).toString() ) ) );
-					}
-				catch (IOException | InterruptedException ex)
-					{
-					throw new RuntimeException( ex );
-					}
-				groupComboBox.setSelectedIndex( 0 );
-				
-				btnRefresh.removeActionListener( btnRefresh.getAction() );
-				
-				btnRefresh.addActionListener( g ->
-					{
-					try
-						{
-						lblGetGroupId.setText( "Got members for " + getClanName(
-								Integer.parseInt( requireNonNull( groupComboBox.getSelectedItem() ).toString() ) ) );
-						memberList.setModel( new DefaultComboBoxModel<>( requireNonNull( getGroupMembers(
-								Integer.parseInt( requireNonNull(
-										(CharSequence) groupComboBox.getSelectedItem() ).toString() ) ) ) ) );
-						}
-					catch (IOException | InterruptedException ex)
-						{
-						throw new RuntimeException( ex );
-						}
-					memberList.setSelectedIndex( 0 );
-					GridBagConstraints gbc_memberList = new GridBagConstraints();
-					gbc_memberList.insets = new Insets( 4, 4, 5, 4 );
-					gbc_memberList.fill = GridBagConstraints.BOTH;
-					gbc_memberList.gridx = 0;
-					gbc_memberList.gridy = 3;
-					memberList.setForeground( Color.WHITE );
-					womPanel.add( memberList, gbc_memberList );
-					JButton btnAddMember = new JButton( "Add to Split" );
-					GridBagConstraints gbc_btnAddMember = new GridBagConstraints();
-					gbc_btnAddMember.gridx = 1;
-					gbc_btnAddMember.gridy = 3;
-					btnAddMember.setForeground( Color.WHITE );
-					womPanel.add( btnAddMember, gbc_btnAddMember );
-					btnAddMember.addActionListener( h ->
-						{
-						if ( splitMembers.getText().contains( "Split with" ) )
-							{splitMembers.setText( requireNonNull( memberList.getSelectedItem() ).toString() );}
-						else
-							{
-							if ( splitMembers.getText().contains(
-									(CharSequence) requireNonNull( memberList.getSelectedItem() ) ) )
-								{
-								return;
-								}
-							splitMembers.setText(
-									splitMembers.getText() + ", " + requireNonNull( memberList.getSelectedItem() ) );
-							}
-						} );
-					womPanel.revalidate();
-					womPanel.repaint();
-					
-					} );
-				} );
+				return;
+				}
+			splitMembers.setText( splitMembers.getText() + ", " + requireNonNull( memberList.getSelectedItem() ) );
 			}
 		} );
 	}
 
-public void doFuture ()
+public void refreshPanel ( JPanel womPanel, JComboBox<Object> groupComboBox, JComboBox memberList, JLabel lblGetGroupId )
 	{
-	
+	try
+		{
+		this.womPanel = womPanel;
+		this.groupComboBox = groupComboBox;
+		this.memberList = memberList;
+		this.lblGetGroupId = lblGetGroupId;
+		groupComboBox.setModel( new DefaultComboBoxModel<>(
+				requireNonNull( getWomGroupIds( requireNonNull( client.getLocalPlayer().getName() ) ) ) ) );
+		int groupId = Integer.parseInt( String.valueOf( (groupComboBox.getSelectedItem()) ) );
+		memberList.setModel( new DefaultComboBoxModel<>( Objects.requireNonNull( getGroupMembers( groupId ) ) ) );
+		String clanName = getClanName( groupId );
+		lblGetGroupId.setText( clanName );
+		}
+	catch (IOException | InterruptedException ex)
+		{
+		throw new RuntimeException( ex );
+		}
 	}
-	
 }
+
 

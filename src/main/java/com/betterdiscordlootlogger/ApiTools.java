@@ -32,7 +32,7 @@ public static String getWikiIcon ( String itemName ) throws IOException, Interru
 	return wikiItem.getQuery().getPages().get( 0 ).getThumbnail().getSource();
 	}
 
-public static Object[] getWomGroupId ( String playerName ) throws IOException, InterruptedException
+public static Object[] getWomGroupIds ( String playerName ) throws IOException, InterruptedException
 	{
 	String compUrl =
 			"https://api.wiseoldman.net/players/username/" + playerName.replace( " ", "_" ).replace( "%20", "_" ) +

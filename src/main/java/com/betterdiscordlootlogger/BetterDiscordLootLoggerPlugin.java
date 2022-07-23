@@ -206,8 +206,6 @@ public void onGameTick ( GameTick event )
 		playerIconUrl = getPlayerIconUrl();
 		colorCode = getColorCode();
 		CompletableFuture.runAsync( () -> betterDiscordLootLoggerPanel.buildWomPanel() );
-		
-		return;
 		}
 		
 		
