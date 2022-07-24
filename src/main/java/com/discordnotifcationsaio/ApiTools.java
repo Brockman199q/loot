@@ -1,7 +1,7 @@
-package com.betterdiscordlootlogger;
+package com.discordnotifcationsaio;
 
-import com.betterdiscordlootlogger.wiki.WikiItem;
-import com.betterdiscordlootlogger.wiseoldman.Groups;
+import com.discordnotifcationsaio.wiki.WikiItem;
+import com.discordnotifcationsaio.wiseoldman.Groups;
 import com.google.gson.Gson;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;

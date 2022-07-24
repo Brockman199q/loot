@@ -1,5 +1,5 @@
 
-package com.betterdiscordlootlogger.wiki;
+package com.discordnotifcationsaio.wiki;
 
 
 import com.google.gson.annotations.Expose;

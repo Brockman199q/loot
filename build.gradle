@@ -36,7 +36,7 @@ dependencies {
 	testImplementation group: 'net.runelite', name:'jshell', version: runeLiteVersion
 }
 
-group = 'com.betterdiscordlootlogger'
+group = 'com.discordnotifcationsaio'
 version = '1.0-SNAPSHOT'
 sourceCompatibility = '1.8'
 

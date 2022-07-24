@@ -1,4 +1,4 @@
-package com.betterdiscordlootlogger.wiseoldman;
+package com.discordnotifcationsaio.wiseoldman;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

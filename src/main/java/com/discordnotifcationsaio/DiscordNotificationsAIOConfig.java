@@ -22,15 +22,15 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.betterdiscordlootlogger;
+package com.discordnotifcationsaio;
 
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
 
-@ConfigGroup("betterdiscordlootlogger")
-public interface BetterDiscordLootLoggerConfig extends Config {
+@ConfigGroup("discordnotifcationsaio")
+public interface DiscordNotificationsAIOConfig extends Config {
         
         // @ConfigItem(
         // keyName = "keybind",

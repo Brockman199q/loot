@@ -22,7 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.betterdiscordlootlogger;
+package com.discordnotifcationsaio;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -72,8 +72,8 @@ import static net.runelite.api.widgets.WidgetID.QUEST_COMPLETED_GROUP_ID;
 import static net.runelite.http.api.RuneLiteAPI.GSON;
 
 @Slf4j
-@PluginDescriptor(name = "Discord Split Tracker")
-public class BetterDiscordLootLoggerPlugin extends Plugin {
+@PluginDescriptor(name = "Discord Notifications/Split Tracker")
+public class DiscordNotificationsAIOPlugin extends Plugin {
 	private static final String COLLECTION_LOG_TEXT = "New item added to your collection log: ";
 
 	private static final Pattern KC_PATTERN = Pattern.compile(
@@ -109,7 +109,7 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 	@Inject
 	public Client client;
 	@Inject
-	public BetterDiscordLootLoggerConfig config;
+	public DiscordNotificationsAIOConfig config;
 	@Inject
 	public OkHttpClient okHttpClient;
 	@Inject
@@ -124,8 +124,8 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 	public ConfigManager configManager;
 
 	@Provides
-	BetterDiscordLootLoggerConfig provideConfig(ConfigManager configManager) {
-	return configManager.getConfig(BetterDiscordLootLoggerConfig.class);
+	DiscordNotificationsAIOConfig provideConfig( ConfigManager configManager) {
+	return configManager.getConfig( DiscordNotificationsAIOConfig.class);
 	}
 
 	public PartyMember partyMember;
@@ -147,7 +147,7 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 	private boolean notificationStarted;
 	@Getter(AccessLevel.PACKAGE)
 	@Setter(AccessLevel.PACKAGE)
-	private BetterDiscordLootLoggerPanel betterDiscordLootLoggerPanel;
+	private DiscordNotificationsAIOPanel discordNotificationsAIOPanel;
 	@Inject
 	private ItemManager itemManager;
 
@@ -182,7 +182,7 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 
 	@Override
 	protected void startUp() throws Exception {
-		betterDiscordLootLoggerPanel = new BetterDiscordLootLoggerPanel(this, client);
+	discordNotificationsAIOPanel = new DiscordNotificationsAIOPanel(this, client);
 
 		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "balance.png");
 	
@@ -191,7 +191,7 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 		leveledSkills = new ArrayList<String>();
 		
 		navButton = NavigationButton.builder().tooltip("Split Tracker").icon(icon).priority(5)
-				.panel(betterDiscordLootLoggerPanel).build();
+		                            .panel( discordNotificationsAIOPanel ).build();
 
 		clientToolbar.addNavigation(navButton);
 
@@ -243,7 +243,7 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 		if (Objects.equals(playerIconUrl, "")) {
 		playerIconUrl = getPlayerIconUrl();
 		colorCode = getColorCode();
-		CompletableFuture.runAsync(() -> betterDiscordLootLoggerPanel.buildWomPanel());
+		CompletableFuture.runAsync(() -> discordNotificationsAIOPanel.buildWomPanel());
 		}
 		
 		if (shouldSendClueMessage && didCompleteClue && config.includeClue())
@@ -369,9 +369,9 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 					} catch (IOException | InterruptedException e) {
 						throw new RuntimeException(e);
 					}
-					BetterDiscordLootLoggerPlugin.this.sendLootMessage(itemName,
+					DiscordNotificationsAIOPlugin.this.sendLootMessage(itemName,
 							lastBossKC == -1 ? null
-									: BetterDiscordLootLoggerPlugin.this.getKc(playerName, lastBossKill),
+									: DiscordNotificationsAIOPlugin.this.getKc(playerName, lastBossKill),
 							npcName, Integer.toString(value), "NPC Loot", thumbnailUrl.get(), "", config.autoLog());
 				});
 			}
@@ -906,9 +906,9 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 							embedsObject);
 
 			if (config.sendScreenshot()) {
-				if (!send && betterDiscordLootLoggerPanel.before != null) {
+				if ( !send && discordNotificationsAIOPanel.before != null) {
 					CompletableFuture.runAsync(
-							() -> sendLootWebhookWithBuffer(url, requestBodyBuilder, betterDiscordLootLoggerPanel.before));
+							() -> sendLootWebhookWithBuffer(url, requestBodyBuilder, discordNotificationsAIOPanel.before));
 				} else {
 					CompletableFuture.runAsync(() -> sendLootWebhookWithScreenshot(url, requestBodyBuilder));
 				}
@@ -1027,7 +1027,7 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 
 	public void dataToPanel(String bossName, String itemName) {
 		drawManager.requestNextFrameListener(
-				image -> betterDiscordLootLoggerPanel.panelOverride(bossName, itemName, (BufferedImage) image));
+				image -> discordNotificationsAIOPanel.panelOverride(bossName, itemName, (BufferedImage) image));
 	}
 
 	private void resetState() {

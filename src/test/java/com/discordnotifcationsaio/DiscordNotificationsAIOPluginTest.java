@@ -1,11 +1,11 @@
-package com.betterdiscordlootlogger;
+package com.discordnotifcationsaio;
 
 import net.runelite.client.RuneLite;
 import net.runelite.client.externalplugins.ExternalPluginManager;
 
-public class BetterDiscordLootLoggerPluginTest {
+public class DiscordNotificationsAIOPluginTest {
 	public static void main(String[] args) throws Exception {
-		ExternalPluginManager.loadBuiltin(BetterDiscordLootLoggerPlugin.class);
+		ExternalPluginManager.loadBuiltin( DiscordNotificationsAIOPlugin.class);
 		RuneLite.main(args);
 	}
 }

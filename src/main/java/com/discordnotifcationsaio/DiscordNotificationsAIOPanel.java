@@ -1,4 +1,4 @@
-package com.betterdiscordlootlogger;
+package com.discordnotifcationsaio;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -16,11 +16,11 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-import static com.betterdiscordlootlogger.ApiTools.*;
+import static com.discordnotifcationsaio.ApiTools.*;
 import static java.util.Objects.requireNonNull;
 
 @Slf4j
-public class BetterDiscordLootLoggerPanel extends PluginPanel {
+public class DiscordNotificationsAIOPanel extends PluginPanel {
 
 	final JTextField npcName = new JTextField();
 	final JTextField itemName = new JTextField();
@@ -40,7 +40,7 @@ public class BetterDiscordLootLoggerPanel extends PluginPanel {
 	ImageIcon icon = new ImageIcon();
 
 	@SneakyThrows
-	BetterDiscordLootLoggerPanel(BetterDiscordLootLoggerPlugin betterDiscordLootLoggerPlugin, Client client) {
+	DiscordNotificationsAIOPanel ( DiscordNotificationsAIOPlugin discordNotificationsAIOPlugin, Client client) {
 		this.client = client;
 		setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
 		setBorder(null);
@@ -249,14 +249,14 @@ public class BetterDiscordLootLoggerPanel extends PluginPanel {
 		reTakeScreenshot.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
 		reTakeScreenshot.setForeground(Color.WHITE);
 		reTakeScreenshot.addActionListener(
-				e -> betterDiscordLootLoggerPlugin.dataToPanel(npcName.getText(), itemName.getText()));
+				e -> discordNotificationsAIOPlugin.dataToPanel(npcName.getText(), itemName.getText()));
 		submitLoot.addActionListener(e -> {
 			if (!splitMembers.getText().contains("Split with") && !splitValue.getText().contains("Split Value") &&
 					!itemName.getText().contains("Item Name")) {
 				submitInfo.setFocusable(true);
 				CompletableFuture.runAsync(() -> {
 					try {
-						betterDiscordLootLoggerPlugin.sendLootMessage(itemName.getText(), null, npcName.getText(),
+						discordNotificationsAIOPlugin.sendLootMessage(itemName.getText(), null, npcName.getText(),
 								splitValue.getText(), "Split Loot", getWikiIcon(itemName.getText()),
 								splitMembers.getText(),
 								false);
@@ -276,7 +276,7 @@ public class BetterDiscordLootLoggerPanel extends PluginPanel {
 				submitInfo.setText("Could not get Item Information. Please try again after receiving loot.");
 				submitInfo.setEditable(false);
 			} else if (splitMembers.getText().contains("Split with") && splitValue.getText().contains("Split Value")) {
-				CompletableFuture.runAsync(() -> betterDiscordLootLoggerPlugin.sendLootMessage(itemName.getText(), null, "",
+				CompletableFuture.runAsync(() -> discordNotificationsAIOPlugin.sendLootMessage(itemName.getText(), null, "",
 						"", "Manual Upload", "", "",
 						false));
 				submitInfo.setText(
@@ -289,7 +289,7 @@ public class BetterDiscordLootLoggerPanel extends PluginPanel {
 			} else {
 				CompletableFuture.runAsync(() -> {
 					try {
-						betterDiscordLootLoggerPlugin.sendLootMessage(itemName.getText(), null, npcName.getText(), "",
+						discordNotificationsAIOPlugin.sendLootMessage(itemName.getText(), null, npcName.getText(), "",
 								"Manual Upload", getWikiIcon(itemName.getText()), "", false);
 					} catch (IOException | InterruptedException ex) {
 						throw new RuntimeException(ex);

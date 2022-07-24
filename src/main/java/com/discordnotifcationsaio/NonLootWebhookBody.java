@@ -1,4 +1,4 @@
-	package com.betterdiscordlootlogger;
+	package com.discordnotifcationsaio;
 	
 	import lombok.Data;
 	
