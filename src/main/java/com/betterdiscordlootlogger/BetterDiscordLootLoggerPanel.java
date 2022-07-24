@@ -329,8 +329,7 @@ BetterDiscordLootLoggerPanel ( BetterDiscordLootLoggerPlugin betterDiscordLootLo
 			submitInfo.setVisible( true );
 			submitInfo.setText(
 					"Sent screenshot with the following:\nNPC name: " + npcName.getText() + "\nItem Name: " +
-					itemName.getText() + "\nSplit Value: " + splitValue.getText() + "\nSplit Members: " +
-					splitMembers.getText() );
+					itemName.getText() );
 			}
 			
 		} );
