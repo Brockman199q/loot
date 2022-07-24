@@ -256,7 +256,7 @@ public class BetterDiscordLootLoggerPanel extends PluginPanel {
 				submitInfo.setFocusable(true);
 				CompletableFuture.runAsync(() -> {
 					try {
-						betterDiscordLootLoggerPlugin.sendMessage(itemName.getText(), null, npcName.getText(),
+						betterDiscordLootLoggerPlugin.sendLootMessage(itemName.getText(), null, npcName.getText(),
 								splitValue.getText(), "Split Loot", getWikiIcon(itemName.getText()),
 								splitMembers.getText(),
 								false);
@@ -276,7 +276,7 @@ public class BetterDiscordLootLoggerPanel extends PluginPanel {
 				submitInfo.setText("Could not get Item Information. Please try again after receiving loot.");
 				submitInfo.setEditable(false);
 			} else if (splitMembers.getText().contains("Split with") && splitValue.getText().contains("Split Value")) {
-				CompletableFuture.runAsync(() -> betterDiscordLootLoggerPlugin.sendMessage(itemName.getText(), null, "",
+				CompletableFuture.runAsync(() -> betterDiscordLootLoggerPlugin.sendLootMessage(itemName.getText(), null, "",
 						"", "Manual Upload", "", "",
 						false));
 				submitInfo.setText(
@@ -289,7 +289,7 @@ public class BetterDiscordLootLoggerPanel extends PluginPanel {
 			} else {
 				CompletableFuture.runAsync(() -> {
 					try {
-						betterDiscordLootLoggerPlugin.sendMessage(itemName.getText(), null, npcName.getText(), "",
+						betterDiscordLootLoggerPlugin.sendLootMessage(itemName.getText(), null, npcName.getText(), "",
 								"Manual Upload", getWikiIcon(itemName.getText()), "", false);
 					} catch (IOException | InterruptedException ex) {
 						throw new RuntimeException(ex);

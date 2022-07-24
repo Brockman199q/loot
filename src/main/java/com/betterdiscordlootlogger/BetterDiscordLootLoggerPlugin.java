@@ -34,6 +34,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.*;
+import net.runelite.api.widgets.WidgetID;
+import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.NpcLootReceived;
@@ -66,6 +68,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static net.runelite.api.widgets.WidgetID.QUEST_COMPLETED_GROUP_ID;
+import static net.runelite.http.api.RuneLiteAPI.GSON;
+
 @Slf4j
 @PluginDescriptor(name = "Discord Split Tracker")
 public class BetterDiscordLootLoggerPlugin extends Plugin {
@@ -85,6 +90,15 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 	private static final String COX_DUST_MESSAGE_TEXT = "Dust recipients: ";
 	private static final String COX_KIT_MESSAGE_TEXT = "Twisted Kit recipients: ";
 	private static final Pattern TOB_UNIQUE_MESSAGE_PATTERN = Pattern.compile("(.+) found something special: (.+)");
+
+	private static final Pattern QUEST_PATTERN_1 = Pattern.compile(".+?ve\\.*? (?<verb>been|rebuilt|.+?ed)? ?(?:the )?'?(?<quest>.+?)'?(?: [Qq]uest)?[!.]?$");
+	
+	private static final Pattern QUEST_PATTERN_2 = Pattern.compile("'?(?<quest>.+?)'?(?: [Qq]uest)? (?<verb>[a-z]\\w+?ed)?(?: f.*?)?[!.]?$");
+	
+	private static final ImmutableList<String> RFD_TAGS = ImmutableList.of("Another Cook", "freed", "defeated", "saved");
+	
+	private static final ImmutableList<String> WORD_QUEST_IN_NAME_TAGS = ImmutableList.of("Another Cook", "Doric", "Heroes", "Legends", "Observatory", "Olaf", "Waterfall");
+
 	public String playerName;
 	public String boss;
 	public String itemName;
@@ -109,10 +123,27 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 	@Inject
 	public ConfigManager configManager;
 
+	@Provides
+	BetterDiscordLootLoggerConfig provideConfig(ConfigManager configManager) {
+	return configManager.getConfig(BetterDiscordLootLoggerConfig.class);
+	}
+
 	public PartyMember partyMember;
 	private String lastBossKill;
 	private int lastBossKC = -1;
-	private boolean shouldSendMessage;
+
+	private Hashtable<String, Integer> currentLevels;
+	
+	private ArrayList<String> leveledSkills;
+	
+	private boolean shouldSendLevelMessage = false;
+	
+	private boolean shouldSendQuestMessage = false;
+	
+	private boolean shouldSendClueMessage = false;
+
+	private int ticksWaited = 0;
+	private boolean shouldSendLootMessage;
 	private boolean notificationStarted;
 	@Getter(AccessLevel.PACKAGE)
 	@Setter(AccessLevel.PACKAGE)
@@ -154,7 +185,11 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 		betterDiscordLootLoggerPanel = new BetterDiscordLootLoggerPanel(this, client);
 
 		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "balance.png");
-
+	
+		currentLevels = new Hashtable<String, Integer>();
+		
+		leveledSkills = new ArrayList<String>();
+		
 		navButton = NavigationButton.builder().tooltip("Split Tracker").icon(icon).priority(5)
 				.panel(betterDiscordLootLoggerPanel).build();
 
@@ -194,24 +229,94 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 				default:
 					playerIconUrl = "";
 			}
-			shouldSendMessage = true;
+		shouldSendLootMessage = true;
 		}
 	}
 
 	@Subscribe
 	public void onGameTick(GameTick event) {
+		boolean didCompleteClue = client.getWidget( WidgetInfo.CLUE_SCROLL_REWARD_ITEM_CONTAINER) != null;
+	
 		if (!client.getGameState().equals(GameState.LOGGED_IN)) {
-			return;
+		return;
 		}
 		if (Objects.equals(playerIconUrl, "")) {
-			playerIconUrl = getPlayerIconUrl();
-			colorCode = getColorCode();
-			CompletableFuture.runAsync(() -> betterDiscordLootLoggerPanel.buildWomPanel());
+		playerIconUrl = getPlayerIconUrl();
+		colorCode = getColorCode();
+		CompletableFuture.runAsync(() -> betterDiscordLootLoggerPanel.buildWomPanel());
 		}
+		
+		if (shouldSendClueMessage && didCompleteClue && config.includeClue())
+			{
+			shouldSendClueMessage = false;
+			sendClueMessage();
+			}
+		if (
+				shouldSendQuestMessage
+				&& config.includeQuestComplete()
+				&& client.getWidget(WidgetInfo.QUEST_COMPLETED_NAME_TEXT) != null
+		) {
+		shouldSendQuestMessage = false;
+		String text = client.getWidget(WidgetInfo.QUEST_COMPLETED_NAME_TEXT).getText();
+		String questName = parseQuestCompletedWidget(text);
+		sendQuestMessage(questName);
+		}
+		if (!shouldSendLevelMessage)
+			{
+			return;
+			}
+		
+		if (ticksWaited < 2)
+			{
+			ticksWaited++;
+			return;
+			}
+		
+		shouldSendLevelMessage = false;
+		ticksWaited = 0;
+		sendLevelMessage();
 
 	}
 
-	// private final List<PartyMember> members = new ArrayList<>();
+	@Subscribe
+	public void onStatChanged(net.runelite.api.events.StatChanged statChanged)
+		{
+		if (!config.includeLevelling())
+			{
+			return;
+			}
+		
+		String skillName = statChanged.getSkill().getName();
+		int newLevel = statChanged.getLevel();
+		
+		// .contains wasn't behaving so I went with == null
+		Integer previousLevel = currentLevels.get(skillName);
+		if (previousLevel == null || previousLevel == 0)
+			{
+			currentLevels.put(skillName, newLevel);
+			return;
+			}
+		
+		if (previousLevel != newLevel)
+			{
+			currentLevels.put(skillName, newLevel);
+			
+			// Certain activities can multilevel, check if any of the levels are valid for the message.
+			for (int level = previousLevel + 1; level <= newLevel; level++)
+				{
+				if (shouldSendForThisLevel(level))
+					{
+					leveledSkills.add(skillName);
+					shouldSendLevelMessage = true;
+					break;
+					}
+				}
+			}
+		}
+
+
+
+// private final List<PartyMember> members = new ArrayList<>();
 	//
 	// public PartyMember getMemberById(final long id) {
 	// for (PartyMember member : members) {
@@ -264,7 +369,7 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 					} catch (IOException | InterruptedException e) {
 						throw new RuntimeException(e);
 					}
-					BetterDiscordLootLoggerPlugin.this.sendMessage(itemName,
+					BetterDiscordLootLoggerPlugin.this.sendLootMessage(itemName,
 							lastBossKC == -1 ? null
 									: BetterDiscordLootLoggerPlugin.this.getKc(playerName, lastBossKill),
 							npcName, Integer.toString(value), "NPC Loot", thumbnailUrl.get(), "", config.autoLog());
@@ -288,18 +393,27 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 
 	@Subscribe
 	public void onChatMessage(ChatMessage event) {
-		if (event.getType() != ChatMessageType.GAMEMESSAGE && event.getType() != ChatMessageType.SPAM &&
-				event.getType() != ChatMessageType.TRADE
-				&& event.getType() != ChatMessageType.FRIENDSCHATNOTIFICATION) {
+		{
+		if (event.getType() != ChatMessageType.GAMEMESSAGE)
+			{
 			return;
+			}
+		
+		String chatMessage = event.getMessage();
+		if (config.setPets() && PET_MESSAGES.stream().anyMatch(chatMessage::contains))
+			{
+			sendPetMessage();
+			}
+		if (config.setCollectionLogs() && chatMessage.startsWith(COLLECTION_LOG_TEXT) && client.getVarbitValue(Varbits.COLLECTION_LOG_NOTIFICATION) == 1)
+			{
+			String itemName = Text.removeTags(chatMessage).substring(COLLECTION_LOG_TEXT.length());
+			sendCollectionLogMessage(itemName);
+			}
 		}
 
 		String message = event.getMessage();
 		Matcher kcmatcher = KC_PATTERN.matcher(message);
-
-		if (config.includePets() && PET_MESSAGES.stream().anyMatch(message::contains)) {
-			sendMessage("", 0, "", "", "pet", "", "", config.autoLog());
-		}
+		
 		final String playerName = client.getLocalPlayer().getName();
 
 		if (config.includeValuableDrops()) {
@@ -346,7 +460,7 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 		// itemManager.search(valuableDropName);
 		//
 		// lastValuableDropItems.put(valuableDropName, valuableDropValueString);
-		//// sendMessage(valuableDropName, getKc(playerName,lastBossKill), "",
+		//// sendLootMessage(valuableDropName, getKc(playerName,lastBossKill), "",
 		// valuableDropValueString, "Boss Loot");
 		// }
 		// }
@@ -362,16 +476,11 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 		// String[] valuableDrop = matcher.group(1).split(" \\(");
 		// String valuableDropName = (String) Array.get(valuableDrop, 0);
 		// String valuableDropValueString = matcher.group(2);
-		// sendMessage(valuableDropName, null, "", valuableDropValueString, "Boss
+		// sendLootMessage(valuableDropName, null, "", valuableDropValueString, "Boss
 		// Loot");
 		// }
 		// }
-
-		if (config.includeCollectionLogItems() && message.startsWith(COLLECTION_LOG_TEXT) &&
-				client.getVarbitValue(Varbits.COLLECTION_LOG_NOTIFICATION) == 1) {
-			String entry = Text.removeTags(message).substring(COLLECTION_LOG_TEXT.length());
-			sendMessage(entry, 0, "", "", "Collection Log", "", "", config.autoLog());
-		}
+	
 
 		if (config.includeRaidLoot()) {
 			if (message.startsWith(COX_DUST_MESSAGE_TEXT)) {
@@ -380,6 +489,7 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 
 				if (dustRecipient.equals(Text.sanitize(Objects.requireNonNull(client.getLocalPlayer().getName())))) {
 					itemName = dropName;
+					sendLootMessage( itemName, getKc( playerName, "cox cm" ), "Chambers of Xeric: Challenge Mode", "", "NPC Loot", "https://oldschool.runescape.wiki/images/thumb/Metamorphic_dust_detail.png/150px-Metamorphic_dust_detail.png", "", true);
 				}
 			}
 			if (message.startsWith(COX_KIT_MESSAGE_TEXT)) {
@@ -388,6 +498,7 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 
 				if (dustRecipient.equals(Text.sanitize(Objects.requireNonNull(client.getLocalPlayer().getName())))) {
 					itemName = dropName;
+					sendLootMessage( itemName, getKc( playerName, "Chambers of Xeric Challenge Mode" ), "Chambers of Xeric: Challenge Mode", "", "NPC Loot", "https://oldschool.runescape.wiki/images/thumb/Metamorphic_dust_detail.png/150px-Metamorphic_dust_detail.png", "", true);
 				}
 			}
 
@@ -398,6 +509,7 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 
 				if (lootRecipient.equals(Text.sanitize(Objects.requireNonNull(client.getLocalPlayer().getName())))) {
 					itemName = dropName;
+				sendLootMessage( itemName, getKc( playerName, "Theatre of Blood" ), "Theatre of Blood", "", "NPC Loot", "", "", true);
 				}
 			}
 		}
@@ -455,32 +567,201 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 	}
 
 	@Subscribe
-	public void onScriptPreFired(ScriptPreFired scriptPreFired) {
-		switch (scriptPreFired.getScriptId()) {
+	public void onScriptPreFired(ScriptPreFired scriptPreFired)
+		{
+		switch (scriptPreFired.getScriptId())
+			{
 			case ScriptID.NOTIFICATION_START:
 				notificationStarted = true;
 				break;
 			case ScriptID.NOTIFICATION_DELAY:
-				if (!notificationStarted) {
+				if (!notificationStarted)
+					{
 					return;
-				}
+					}
 				String notificationTopText = client.getVarcStrValue(VarClientStr.NOTIFICATION_TOP_TEXT);
 				String notificationBottomText = client.getVarcStrValue(VarClientStr.NOTIFICATION_BOTTOM_TEXT);
-				if (notificationTopText.equalsIgnoreCase("Collection log") && config.includeCollectionLogItems()) {
-					String entry = Text.removeTags(notificationBottomText).substring("New item:".length());
-					sendMessage(entry, 0, "", "", "Collection Log", "", "", config.autoLog());
-				}
+				if (notificationTopText.equalsIgnoreCase("Collection log") && config.setCollectionLogs())
+					{
+					String itemName = "**" + Text.removeTags(notificationBottomText).substring("New item:".length()) + "**";
+					sendCollectionLogMessage(itemName);
+					}
 				notificationStarted = false;
 				break;
+			}
 		}
-	}
 
-	@Provides
-	BetterDiscordLootLoggerConfig provideConfig(ConfigManager configManager) {
-		return configManager.getConfig(BetterDiscordLootLoggerConfig.class);
-	}
+	@Subscribe
+	public void onActorDeath(ActorDeath actorDeath)
+		{
+		if (!config.includeDeath()) {
+		return;
+		}
+		
+		Actor actor = actorDeath.getActor();
+		if (actor instanceof Player)
+			{
+			Player player = (Player) actor;
+			if (player == client.getLocalPlayer())
+				{
+				sendDeathMessage();
+				}
+			}
+		}
 
-	public void sendMessage(String itemName, Integer bossKC, String npcName, String itemValue, String notificationType,
+	private boolean shouldSendForThisLevel(int level)
+		{
+		return level >= config.minLevel()
+		       && levelMeetsIntervalRequirement(level);
+		}
+	
+	private boolean levelMeetsIntervalRequirement(int level) {
+	int levelInterval = config.levelInterval();
+	
+	if (config.linearLevelMax() > 0) {
+	levelInterval = (int) Math.max(Math.ceil(-.1*level + config.linearLevelMax()), 1);
+	}
+	
+	return levelInterval <= 1
+	       || level == 99
+	       || level % levelInterval == 0;
+	}
+	
+	private void sendQuestMessage(String questName)
+		{
+		String codeBlocks = "";
+		String bold = "**";
+		if (config.codeBlocks()) {
+		codeBlocks = "`";
+		bold = "";
+		} else
+			codeBlocks = "";
+		
+		String localName = bold + client.getLocalPlayer().getName() + bold;
+		
+		String questMessageString = config.questMessage().replaceAll("\\$name", codeBlocks + localName + codeBlocks)
+		                                  .replaceAll("\\$quest", codeBlocks + questName + codeBlocks);
+		
+		NonLootWebhookBody nonLootWebhookBody = new NonLootWebhookBody();
+		nonLootWebhookBody.setContent(questMessageString);
+		sendNonLootWebhook( nonLootWebhookBody, config.sendQuestingScreenshot());
+		}
+	
+	private void sendDeathMessage()
+		{
+		String codeBlocks = "";
+		String bold = "**";
+		if (config.codeBlocks()) {
+		codeBlocks = "`";
+		bold = "";
+		} else
+			codeBlocks = "";
+		
+		String localName = bold + client.getLocalPlayer().getName() + bold;
+		
+		String deathMessageString = config.deathMessage().replaceAll("\\$name", codeBlocks + localName + codeBlocks);
+		
+		NonLootWebhookBody nonLootWebhookBody = new NonLootWebhookBody();
+		nonLootWebhookBody.setContent(deathMessageString);
+		sendNonLootWebhook( nonLootWebhookBody, config.sendDeathScreenshot());
+		}
+	
+	private void sendClueMessage()
+		{
+		String codeBlocks = "";
+		String bold = "**";
+		if (config.codeBlocks()) {
+		codeBlocks = "`";
+		bold = "";
+		} else
+			codeBlocks = "";
+		
+		String localName = bold + client.getLocalPlayer().getName() + bold;
+		
+		String clueMessage = config.clueMessage().replaceAll("\\$name", codeBlocks + localName + codeBlocks);
+		
+		NonLootWebhookBody nonLootWebhookBody = new NonLootWebhookBody();
+		nonLootWebhookBody.setContent(clueMessage);
+		sendNonLootWebhook( nonLootWebhookBody, config.sendClueScreenshot());
+		}
+	
+	private void sendLevelMessage()
+		{
+		String codeBlocks = "";
+		String bold = "**";
+		if (config.codeBlocks()) {
+		codeBlocks = "`";
+		bold = "";
+		} else
+			codeBlocks = "";
+		
+		String localName = bold + client.getLocalPlayer().getName() + bold;
+		
+		String levelUpString = config.levelMessage().replaceAll("\\$name", codeBlocks + localName + codeBlocks);
+		
+		String[] skills = new String[leveledSkills.size()];
+		skills = leveledSkills.toArray(skills);
+		leveledSkills.clear();
+		
+		for (int i = 0; i < skills.length; i++)
+			{
+			if(i != 0) {
+			levelUpString += config.andLevelMessage();
+			}
+			
+			String fixed = levelUpString
+					               .replaceAll("\\$skill", codeBlocks + skills[i] + codeBlocks)
+					               .replaceAll("\\$level", codeBlocks + currentLevels.get(skills[i]).toString() + codeBlocks);
+			
+			levelUpString = fixed;
+			}
+		
+		NonLootWebhookBody nonLootWebhookBody = new NonLootWebhookBody();
+		nonLootWebhookBody.setContent(levelUpString);
+		sendNonLootWebhook( nonLootWebhookBody, config.sendLevellingScreenshot());
+		}
+	
+	private void sendPetMessage()
+		{
+		String codeBlocks = "";
+		String bold = "**";
+		if (config.codeBlocks()) {
+		codeBlocks = "`";
+		bold = "";
+		} else
+			codeBlocks = "";
+		
+		String localName = bold + client.getLocalPlayer().getName() + bold;
+		
+		String petMessageString = config.petMessage().replaceAll("\\$name", codeBlocks + localName + codeBlocks);
+		
+		NonLootWebhookBody nonLootWebhookBody = new NonLootWebhookBody();
+		nonLootWebhookBody.setContent(petMessageString);
+		sendNonLootWebhook( nonLootWebhookBody, config.sendPetScreenshot());
+		}
+	
+	private void sendCollectionLogMessage(String itemName)
+		{
+		String codeBlocks = "";
+		String bold = "**";
+		if (config.codeBlocks()) {
+		codeBlocks = "`";
+		bold = "";
+		} else
+			codeBlocks = "";
+		
+		String localName = bold + client.getLocalPlayer().getName() + bold;
+		
+		String collectionLogMessageString = config.collectionLogMessage()
+		                                          .replaceAll("\\$name", codeBlocks + localName + codeBlocks)
+		                                          .replaceAll("\\$itemName", codeBlocks + itemName + codeBlocks);
+		
+		NonLootWebhookBody nonLootWebhookBody = new NonLootWebhookBody();
+		nonLootWebhookBody.setContent(collectionLogMessageString);
+		sendNonLootWebhook( nonLootWebhookBody, config.sendCollectionLogScreenshot());
+		}
+
+	public void sendLootMessage(String itemName, Integer bossKC, String npcName, String itemValue, String notificationType,
 			String itemImageURL, String splitMembers, boolean send) {
 		this.itemName = itemName;
 		this.itemKc = bossKC;
@@ -494,7 +775,7 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 		} else
 			codeBlocks = "";
 
-		if (!shouldSendMessage) {
+		if (! shouldSendLootMessage ) {
 			return;
 		}
 
@@ -558,9 +839,9 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 
 		if (!itemValue.isEmpty()) {
 			if (!notificationType.equals("Split Loot")) {
-				embedsObject.put("description", codeBlocks + "Value: " + valueMessage + codeBlocks);
+				embedsObject.put("description", "**Value: **" + codeBlocks + valueMessage + codeBlocks);
 			} else {
-				embedsObject.put("description", codeBlocks + "Split Value: " + valueMessage + codeBlocks);
+				embedsObject.put("description", "**Split Value: **" + codeBlocks + valueMessage + codeBlocks);
 			}
 		}
 
@@ -571,17 +852,17 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 		if (config.includeBingo() && !Objects.equals(config.bingoString(), "")) {
 			String bingoString = config.bingoString();
 
-			bingoField.put("name", "Bingo String").put("value", bingoString).put("inline", true);
+			bingoField.put("name", "Bingo String").put("value", codeBlocks + bingoString + codeBlocks).put("inline", true);
 			fieldsArray.put(bingoField);
 		}
 
 		if (!config.customValue().equals("")) {
-			customField.put("name", config.customField()).put("value", config.customValue()).put("inline", true);
+			customField.put("name", config.customField()).put("value", codeBlocks + config.customValue() + codeBlocks).put("inline", true);
 			fieldsArray.put(customField);
 		}
 
 		if (!Objects.equals(splitMembers, "")) {
-			splitField.put("name", "Split With").put("value", splitMembers).put("inline", true);
+			splitField.put("name", "Split With").put("value", codeBlocks + splitMembers + codeBlocks).put("inline", true);
 			fieldsArray.put(splitField);
 		}
 
@@ -600,11 +881,11 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 
 		footerObject.put("text", footerString);
 		embedsObject.put("footer", footerObject);
-		CompletableFuture.runAsync(() -> sendWebhook(webhookObject.toString(), send));
+		CompletableFuture.runAsync(() -> sendLootWebhook(webhookObject.toString(), send));
 		// System.out.println( webhookObject );
 	}
 
-	public void sendWebhook(String embedsObject, boolean send) {
+	public void sendLootWebhook(String embedsObject, boolean send) {
 		String configUrl;
 		if (send && config.autoLog() && config.autoWebHookToggle()) {
 			configUrl = config.autoWebHook();
@@ -627,9 +908,9 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 			if (config.sendScreenshot()) {
 				if (!send && betterDiscordLootLoggerPanel.before != null) {
 					CompletableFuture.runAsync(
-							() -> sendWebhookWithBuffer(url, requestBodyBuilder, betterDiscordLootLoggerPanel.before));
+							() -> sendLootWebhookWithBuffer(url, requestBodyBuilder, betterDiscordLootLoggerPanel.before));
 				} else {
-					CompletableFuture.runAsync(() -> sendWebhookWithScreenshot(url, requestBodyBuilder));
+					CompletableFuture.runAsync(() -> sendLootWebhookWithScreenshot(url, requestBodyBuilder));
 				}
 			} else {
 				CompletableFuture.runAsync(() -> buildRequestAndSend(url, requestBodyBuilder));
@@ -637,7 +918,7 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 		}
 	}
 
-	public void sendWebhookWithScreenshot(HttpUrl url, MultipartBody.Builder requestBodyBuilder) {
+	public void sendLootWebhookWithScreenshot(HttpUrl url, MultipartBody.Builder requestBodyBuilder) {
 		drawManager.requestNextFrameListener(image -> {
 			BufferedImage bufferedImage = (BufferedImage) image;
 			byte[] imageBytes;
@@ -655,7 +936,7 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 		});
 	}
 
-	public void sendWebhookWithBuffer(HttpUrl url, MultipartBody.Builder requestBodyBuilder, BufferedImage screenshot) {
+	public void sendLootWebhookWithBuffer(HttpUrl url, MultipartBody.Builder requestBodyBuilder, BufferedImage screenshot) {
 
 		byte[] imageBytes;
 		try {
@@ -669,6 +950,59 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 				RequestBody.create(MediaType.parse("image/png"), imageBytes));
 		buildRequestAndSend(url, requestBodyBuilder);
 	}
+
+	private void sendNonLootWebhook( NonLootWebhookBody discordWebhookBody, boolean sendScreenshot)
+		{
+		String configUrl;
+		if (config.autoLog() && config.autoWebHookToggle()) {
+		configUrl = config.autoWebHook();
+		} else if (config.autoWebHookToggle()) {
+		configUrl = config.webhook();
+		} else if (Objects.equals(config.autoWebHook(), "")) {
+		configUrl = config.webhook();
+		} else {
+		configUrl = config.webhook();
+		}
+		
+		if (Strings.isNullOrEmpty(configUrl)) {
+		} else {
+		
+		HttpUrl url = HttpUrl.parse(configUrl);
+		MultipartBody.Builder requestBodyBuilder = new MultipartBody.Builder()
+				                                           .setType(MultipartBody.FORM)
+				                                           .addFormDataPart("payload_json", GSON.toJson(discordWebhookBody));
+		
+		if (sendScreenshot)
+			{
+			sendNonLootWebhookWithScreenshot(url, requestBodyBuilder);
+			}
+		else
+			{
+			buildRequestAndSend(url, requestBodyBuilder);
+			}
+		}}
+	
+	private void sendNonLootWebhookWithScreenshot(HttpUrl url, MultipartBody.Builder requestBodyBuilder)
+		{
+		drawManager.requestNextFrameListener(image ->
+			{
+			BufferedImage bufferedImage = (BufferedImage) image;
+			byte[] imageBytes;
+			try
+				{
+				imageBytes = convertImageToByteArray(bufferedImage);
+				}
+			catch (IOException e)
+				{
+				log.warn("Error converting image to byte array", e);
+				return;
+				}
+			
+			requestBodyBuilder.addFormDataPart("file", "image.png",
+					RequestBody.create(MediaType.parse("image/png"), imageBytes));
+			buildRequestAndSend(url, requestBodyBuilder);
+			});
+		}
 
 	private void buildRequestAndSend(HttpUrl url, MultipartBody.Builder requestBodyBuilder) {
 		RequestBody requestBody = requestBodyBuilder.build();
@@ -697,7 +1031,64 @@ public class BetterDiscordLootLoggerPlugin extends Plugin {
 	}
 
 	private void resetState() {
-		shouldSendMessage = false;
+	currentLevels.clear();
+	leveledSkills.clear();
+	shouldSendLevelMessage = false;
+	shouldSendQuestMessage = false;
+	shouldSendClueMessage = false;
+	shouldSendLootMessage = false;
+	ticksWaited = 0;
 	}
+
+	static String parseQuestCompletedWidget(final String text)
+		{
+		// "You have completed The Corsair Curse!"
+		final Matcher questMatch1 = QUEST_PATTERN_1.matcher(text);
+		// "'One Small Favour' completed!"
+		final Matcher questMatch2 = QUEST_PATTERN_2.matcher(text);
+		final Matcher questMatchFinal = questMatch1.matches() ? questMatch1 : questMatch2;
+		if (!questMatchFinal.matches())
+			{
+			return "Unable to find quest name!";
+			}
+		
+		String quest = questMatchFinal.group("quest");
+		String verb = questMatchFinal.group("verb") != null ? questMatchFinal.group("verb") : "";
+		
+		if (verb.contains("kind of"))
+			{
+			quest += " partial completion";
+			}
+		else if (verb.contains("completely"))
+			{
+			quest += " II";
+			}
+		
+		if (RFD_TAGS.stream().anyMatch((quest + verb)::contains))
+			{
+			quest = "Recipe for Disaster - " + quest;
+			}
+		
+		if (WORD_QUEST_IN_NAME_TAGS.stream().anyMatch(quest::contains))
+			{
+			quest += " Quest";
+			}
+		
+		return quest;
+		}
+	
+	@Subscribe
+	public void onWidgetLoaded(WidgetLoaded event)
+		{
+		int groupId = event.getGroupId();
+		
+		if (groupId == QUEST_COMPLETED_GROUP_ID) {
+		shouldSendQuestMessage = true;
+		}
+		
+		if ( groupId == WidgetID.CLUE_SCROLL_REWARD_GROUP_ID) {
+		shouldSendClueMessage = true;
+		}
+		}
 
 }
