@@ -285,12 +285,11 @@ BetterDiscordLootLoggerPanel ( BetterDiscordLootLoggerPlugin betterDiscordLootLo
 					}
 				} );
 			submitInfo.setText(
-					"Sent screenshot with the following:\nNPC name: " + npcName.getText() + "\nItem Name: " + itemName.getText() + splitValue.getText() + "\nSplit Members: " +
+					"Sent screenshot with the following:\nNPC name: " + npcName.getText() + "\nItem Name: " + itemName.getText() + "\nSplit Value: " + splitValue.getText() + "\nSplit Members: " +
 					splitMembers.getText() );
 			npcName.setText( "Boss/NPC Name" );
 			itemName.setText( "Item Name" );
 			splitValue.setText( "Split Value (Per-Player)" );
-			splitMembers.setText( "Split with (Player Names)" );
 			submitInfo.setVisible( true );
 			}
 		else if ( npcName.getText().equals( "Boss/NPC Name" ) && itemName.getText().equals( "Item Name" ) )
@@ -308,7 +307,6 @@ BetterDiscordLootLoggerPanel ( BetterDiscordLootLoggerPlugin betterDiscordLootLo
 			npcName.setText( "Boss/NPC Name" );
 			itemName.setText( "Item Name" );
 			splitValue.setText( "Split Value (Per-Player)" );
-			splitMembers.setText( "Split with (Player Names)" );
 			submitInfo.setVisible( true );
 			}
 		else
@@ -328,7 +326,6 @@ BetterDiscordLootLoggerPanel ( BetterDiscordLootLoggerPlugin betterDiscordLootLo
 			npcName.setText( "Boss/NPC Name" );
 			itemName.setText( "Item Name" );
 			splitValue.setText( "Split Value (Per-Player)" );
-			splitMembers.setText( "Split with (Player Names)" );
 			submitInfo.setVisible( true );
 			submitInfo.setText(
 					"Sent screenshot with the following:\nNPC name: " + npcName.getText() + "\nItem Name: " +
@@ -414,7 +411,7 @@ public void panelOverride ( String bossName, String itemDropped, BufferedImage s
 		submitInfo.setVisible( true );
 		if ( itemName.getText().contains( "Item Name" ) )
 			{
-			submitInfo.setText( "Failed to get Item Info, please wait until you've received loot." );
+			submitInfo.setText( "Could not get Item Information. Please try again after receiving loot." );
 			return;
 			}
 		else
@@ -522,6 +519,7 @@ private void runBuilder ()
 			SwingUtilities.invokeLater(()->
 				{
 				int groupIndex = 0;
+				if (Objects.equals( btnRefresh.getText(), "Refresh" )) refreshPanel( womPanel,groupComboBox, memberList,lblGetGroupId,btnRefresh );
 				if ( Objects.equals( btnRefresh.getText(), "Search" ) )
 					{
 					groupIndex = groupComboBox.getSelectedIndex();
