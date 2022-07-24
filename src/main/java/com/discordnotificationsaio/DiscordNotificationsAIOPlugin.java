@@ -379,7 +379,7 @@ private ClientThread clientThread;
 					sendLootMessage(itemName,
 							lastBossKC == -1 ? null
 									: getKc(playerName, lastBossKill),
-							npcName, Integer.toString(value), "NPC Loot", thumbnailUrl.get(), "", config.autoLog());
+							npcName, Integer.toString(value), "Loot Received", thumbnailUrl.get(), "", config.autoLog());
 				});
 			}
 		});
@@ -432,7 +432,7 @@ private ClientThread clientThread;
 		sendLootMessage(itemName,
 				lastBossKC == -1 ? null
 				                 : getKc(playerName, lastBossKill),
-				npcName, Integer.toString(value), "NPC Loot", thumbnailUrl.get(), "", config.autoLog());
+				npcName, Integer.toString(value), "Loot Received", thumbnailUrl.get(), "", config.autoLog());
 		});
 		}
 		});
@@ -554,7 +554,7 @@ private ClientThread clientThread;
 
 				if (dustRecipient.equals(Text.sanitize(Objects.requireNonNull(client.getLocalPlayer().getName())))) {
 					itemName = dropName;
-					sendLootMessage( itemName, getKc( playerName, "cox cm" ), "Chambers of Xeric: Challenge Mode", "", "NPC Loot", "https://oldschool.runescape.wiki/images/thumb/Metamorphic_dust_detail.png/150px-Metamorphic_dust_detail.png", "", true);
+					sendLootMessage( itemName, getKc( playerName, "cox cm" ), "Chambers of Xeric: Challenge Mode", "", "Loot Received", "https://oldschool.runescape.wiki/images/thumb/Metamorphic_dust_detail.png/150px-Metamorphic_dust_detail.png", "", true);
 				}
 			}
 			if (message.startsWith(COX_KIT_MESSAGE_TEXT)) {
@@ -563,7 +563,7 @@ private ClientThread clientThread;
 
 				if (dustRecipient.equals(Text.sanitize(Objects.requireNonNull(client.getLocalPlayer().getName())))) {
 					itemName = dropName;
-					sendLootMessage( itemName, getKc( playerName, "Chambers of Xeric Challenge Mode" ), "Chambers of Xeric: Challenge Mode", "", "NPC Loot", "https://oldschool.runescape.wiki/images/thumb/Metamorphic_dust_detail.png/150px-Metamorphic_dust_detail.png", "", true);
+					sendLootMessage( itemName, getKc( playerName, "Chambers of Xeric Challenge Mode" ), "Chambers of Xeric: Challenge Mode", "", "Loot Received", "https://oldschool.runescape.wiki/images/thumb/Metamorphic_dust_detail.png/150px-Metamorphic_dust_detail.png", "", true);
 				}
 			}
 
@@ -574,7 +574,7 @@ private ClientThread clientThread;
 
 				if (lootRecipient.equals(Text.sanitize(Objects.requireNonNull(client.getLocalPlayer().getName())))) {
 					itemName = dropName;
-				sendLootMessage( itemName, getKc( playerName, "Theatre of Blood" ), "Theatre of Blood", "", "NPC Loot", "", "", true);
+				sendLootMessage( itemName, getKc( playerName, "Theatre of Blood" ), "Theatre of Blood", "", "Loot Received", "", "", true);
 				}
 			}
 		}
@@ -603,7 +603,7 @@ private ClientThread clientThread;
 //		CompletableFuture<Boolean> f = new CompletableFuture<>();
 //		clientThread.invokeLater(() -> {
 //		sendLootMessage( itemManager.getItemComposition(itemId).getName(),getKc(playerName,
-//				Objects.requireNonNull( npcName ) ),npcName,itemValue,"NPC Loot","","",true );
+//				Objects.requireNonNull( npcName ) ),npcName,itemValue,"Loot Received","","",true );
 //			});
 //		return f;
 //		}
@@ -884,7 +884,7 @@ private ClientThread clientThread;
 			case "Collection Log":
 				itemName = "a new collection log item: " + itemName + "!";
 				break;
-			case "NPC Loot":
+			case "Loot Received":
 				itemName = "a rare drop from " + npcName + ": " + itemName + "!";
 				break;
 			default:
