@@ -36,6 +36,7 @@ import net.runelite.api.*;
 import net.runelite.api.events.*;
 import net.runelite.api.widgets.WidgetID;
 import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.NpcLootReceived;
@@ -45,11 +46,13 @@ import net.runelite.client.input.KeyManager;
 import net.runelite.client.party.PartyMember;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.loottracker.LootReceived;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.DrawManager;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.util.ImageUtil;
 import net.runelite.client.util.Text;
+import net.runelite.http.api.loottracker.LootRecordType;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
@@ -57,10 +60,12 @@ import org.json.JSONObject;
 
 import javax.imageio.ImageIO;
 import javax.inject.Inject;
+import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -122,8 +127,10 @@ public class DiscordNotificationsAIOPlugin extends Plugin {
 	public DrawManager drawManager;
 	@Inject
 	public ConfigManager configManager;
+private RarityChecker rarityChecker;
+private ClientThread clientThread;
 
-	@Provides
+@Provides
 	DiscordNotificationsAIOConfig provideConfig( ConfigManager configManager) {
 	return configManager.getConfig( DiscordNotificationsAIOConfig.class);
 	}
@@ -369,13 +376,15 @@ public class DiscordNotificationsAIOPlugin extends Plugin {
 					} catch (IOException | InterruptedException e) {
 						throw new RuntimeException(e);
 					}
-					DiscordNotificationsAIOPlugin.this.sendLootMessage(itemName,
+					sendLootMessage(itemName,
 							lastBossKC == -1 ? null
-									: DiscordNotificationsAIOPlugin.this.getKc(playerName, lastBossKill),
+									: getKc(playerName, lastBossKill),
 							npcName, Integer.toString(value), "NPC Loot", thumbnailUrl.get(), "", config.autoLog());
 				});
 			}
 		});
+		
+		
 
 		// lastValuableDropItems.forEach((name, value) ->
 		// {
@@ -392,6 +401,62 @@ public class DiscordNotificationsAIOPlugin extends Plugin {
 	}
 
 	@Subscribe
+	public void onLootReceived(LootReceived lootReceived)
+		{
+		if(isPlayerIgnored()) return;
+		
+		// Only process EVENTS such as Barrows, CoX etc. and PICKPOCKET
+		// For NPCs onNpcLootReceived receives more information and is used instead.
+		if (lootReceived.getType() == LootRecordType.NPC)
+			{
+			return;
+			}
+		String npcName = lootReceived.getName();
+		
+		Collection<ItemStack> items = lootReceived.getItems();
+		List<CompletableFuture<Boolean>> futures = new ArrayList<>();
+		
+		items.forEach(itemStack -> {
+		int itemId = itemStack.getId();
+		int value = itemManager.getItemPrice(itemId) * itemStack.getQuantity();
+		if (value >= config.valuableDropThreshold()) {
+		String itemName = itemManager.getItemComposition(itemId).getName();
+		dataToPanel(npcName, itemName);
+		AtomicReference<String> thumbnailUrl = new AtomicReference<>("");
+		CompletableFuture.runAsync(() -> {
+		try {
+		thumbnailUrl.set(ApiTools.getWikiIcon(itemName));
+		} catch (IOException | InterruptedException e) {
+		throw new RuntimeException(e);
+		}
+		sendLootMessage(itemName,
+				lastBossKC == -1 ? null
+				                 : getKc(playerName, lastBossKill),
+				npcName, Integer.toString(value), "NPC Loot", thumbnailUrl.get(), "", config.autoLog());
+		});
+		}
+		});
+		}
+	
+//	private CompletableFuture<ItemData> getLootReceivedItemData(String eventName, LootRecordType lootRecordType, int itemId){
+//	CompletableFuture<ItemData> result = new CompletableFuture<>();
+//
+//	ItemData itemData = lootRecordType == LootRecordType.PICKPOCKET ?
+//	                    rarityChecker.CheckRarityPickpocket(eventName, EnrichItem(itemId), itemManager) :
+//	                    rarityChecker.CheckRarityEvent(eventName, EnrichItem(itemId), itemManager);
+//
+//	result.complete(itemData);
+//	return result;
+//	}
+//
+//	private CompletableFuture<ItemData> getNPCLootReceivedItemData(int npcId, int itemId, int quantity)
+//		{
+//		ItemData incomplete = EnrichItem(itemId);
+//		return rarityChecker.CheckRarityNPC(npcId, incomplete, itemManager, quantity);
+//		}
+
+
+@Subscribe
 	public void onChatMessage(ChatMessage event) {
 		{
 		if (event.getType() != ChatMessageType.GAMEMESSAGE)
@@ -514,6 +579,34 @@ public class DiscordNotificationsAIOPlugin extends Plugin {
 			}
 		}
 	}
+
+	private ItemData EnrichItem(int itemId)
+		{
+		ItemData r = new ItemData();
+		r.ItemId = itemId;
+		r.GePrice = itemManager.getItemPrice(itemId);
+		r.HaPrice = itemManager.getItemComposition(itemId).getHaPrice();
+		
+		if(log.isDebugEnabled()){
+		log.debug( MessageFormat.format("Item {0} prices HA{1}, GE{2}", itemId, r.HaPrice, r.GePrice));
+		}
+		
+		return r;
+		}
+	
+//	private CompletableFuture<Boolean> processNpcNotification(NPC npc, int itemId, int quantity, float rarity)
+//		{
+//		int npcId = npc.getId();
+//		int npcCombatLevel = npc.getCombatLevel();
+//		String npcName = npc.getName();
+//
+//		CompletableFuture<Boolean> f = new CompletableFuture<>();
+//		clientThread.invokeLater(() -> {
+//		sendLootMessage( itemManager.getItemComposition(itemId).getName(),getKc(playerName,
+//				Objects.requireNonNull( npcName ) ),npcName,itemValue,"NPC Loot","","",true );
+//			});
+//		return f;
+//		}
 
 	private boolean isPlayerIgnored() {
 		if (config.whiteListedRSNs().trim().length() > 0) {
