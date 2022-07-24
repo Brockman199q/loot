@@ -1,4 +1,4 @@
-package com.discordnotifcationsaio;
+package com.discordnotificationsaio;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-import static com.discordnotifcationsaio.ApiTools.*;
+import static com.discordnotificationsaio.ApiTools.*;
 import static java.util.Objects.requireNonNull;
 
 @Slf4j

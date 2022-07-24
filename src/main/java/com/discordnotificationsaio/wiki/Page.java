@@ -1,5 +1,5 @@
 
-package com.discordnotifcationsaio.wiki;
+package com.discordnotificationsaio.wiki;
 
 
 import com.google.gson.annotations.Expose;

@@ -1,7 +1,7 @@
-package com.discordnotifcationsaio;
+package com.discordnotificationsaio;
 
-import com.discordnotifcationsaio.wiki.WikiItem;
-import com.discordnotifcationsaio.wiseoldman.Groups;
+import com.discordnotificationsaio.wiki.WikiItem;
+import com.discordnotificationsaio.wiseoldman.Groups;
 import com.google.gson.Gson;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;

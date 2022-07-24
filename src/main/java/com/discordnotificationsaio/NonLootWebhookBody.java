@@ -1,4 +1,4 @@
-	package com.discordnotifcationsaio;
+	package com.discordnotificationsaio;
 	
 	import lombok.Data;
 	

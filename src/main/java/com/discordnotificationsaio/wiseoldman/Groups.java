@@ -1,4 +1,4 @@
-package com.discordnotifcationsaio.wiseoldman;
+package com.discordnotificationsaio.wiseoldman;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

@@ -1,4 +1,4 @@
-package com.discordnotifcationsaio;
+package com.discordnotificationsaio;
 
 import net.runelite.client.RuneLite;
 import net.runelite.client.externalplugins.ExternalPluginManager;
