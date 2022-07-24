@@ -3,16 +3,15 @@ package com.betterdiscordlootlogger;
 import com.betterdiscordlootlogger.wiki.WikiItem;
 import com.betterdiscordlootlogger.wiseoldman.Groups;
 import com.google.gson.Gson;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
+import okhttp3.*;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.IntStream;
 
 public class ApiTools {
@@ -24,16 +23,47 @@ public static String getWikiIcon ( String itemName ) throws IOException, Interru
 			itemName.replace( " ", "_" ).replace( "%20", "_" );
 	OkHttpClient client = new OkHttpClient();
 	Request request = new Request.Builder().url( sURL ).build();
-	String responseBody = Objects.requireNonNull( client.newCall( request ).execute().body() ).string();
-	Gson g = new Gson();
-	if ( ! responseBody.contains( "source" ) )
+	CompletableFuture<String> icon = new CompletableFuture<>();
+	CompletableFuture.supplyAsync( () ->
 		{
-		return "https://oldschool.runescape.wiki/images/Coins_10000.png";
+		client.newCall( request ).enqueue( new Callback() {
+			@Override
+			public void onFailure ( @NotNull Call call, @NotNull IOException e )
+				{
+				
+				icon.completeExceptionally( e );
+				}
+			
+			@Override
+			public void onResponse ( @NotNull Call call, @NotNull Response response ) throws IOException
+				{
+				String responseBody = Objects.requireNonNull( response.body() ).string();
+				Gson g = new Gson();
+				
+					if ( responseBody.contains( "source" ) )
+						{
+						WikiItem wikiItem = g.fromJson( responseBody, WikiItem.class );
+//						System.out.println(wikiItem.getQuery().getPages().get( 0 ).getThumbnail().getSource());
+						String wikiIcon = wikiItem.getQuery().getPages().get( 0 ).getThumbnail().getSource();
+						icon.complete( wikiIcon );
+						response.close();
+						}
+					}
+				
+		} );
+		// System.out.println( icon.getNow( "failed https://oldschool.runescape.wiki/images/Coins_10000.png" ) );
+		return icon;
+		});
+	try
+		{
+		return icon.get();
 		}
-	WikiItem wikiItem = g.fromJson( responseBody, WikiItem.class );
-//        System.out.println(wikiItem.getQuery().getPages().get(0).getThumbnail().getSource());
-	return wikiItem.getQuery().getPages().get( 0 ).getThumbnail().getSource();
+	catch (ExecutionException e)
+		{
+		throw new RuntimeException( e );
+		}
 	}
+
 
 public static Object[] getWomGroupIds ( String playerName ) throws IOException, InterruptedException
 	{

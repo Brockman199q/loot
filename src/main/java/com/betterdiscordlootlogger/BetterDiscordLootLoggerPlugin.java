@@ -49,6 +49,7 @@ import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.util.ImageUtil;
 import net.runelite.client.util.Text;
 import okhttp3.*;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -185,10 +186,26 @@ public void onGameStateChanged ( GameStateChanged event )
 	if ( event.getGameState().equals( GameState.LOGIN_SCREEN ) )
 		{
 		resetState();
-		playerIconUrl = "";
 		}
 	else
 		{
+		switch (client.getAccountType())
+			{
+			case IRONMAN:
+				playerIconUrl = "https://oldschool.runescape.wiki/images/0/09/Ironman_chat_badge.png";
+			case HARDCORE_IRONMAN:
+				playerIconUrl = "https://oldschool.runescape.wiki/images/b/b8/Hardcore_ironman_chat_badge.png";
+			case ULTIMATE_IRONMAN:
+				playerIconUrl = "https://oldschool.runescape.wiki/images/0/02/Ultimate_ironman_chat_badge.png";
+			case GROUP_IRONMAN:
+				playerIconUrl = "https://oldschool.runescape.wiki/images/Group_ironman_chat_badge.png";
+			case HARDCORE_GROUP_IRONMAN:
+				playerIconUrl = "https://oldschool.runescape.wiki/images/Hardcore_group_ironman_chat_badge.png";
+			case NORMAL:
+				playerIconUrl = "https://oldschool.runescape.wiki/images/thumb/Grand_Exchange_logo.png/225px-Grand_Exchange_logo.png?88cff";
+			default:
+				playerIconUrl = "";
+			}
 		shouldSendMessage = true;
 		}
 	}
@@ -206,7 +223,6 @@ public void onGameTick ( GameTick event )
 		colorCode = getColorCode();
 		CompletableFuture.runAsync( () -> betterDiscordLootLoggerPanel.buildWomPanel() );
 		}
-		
 		
 	}
 
@@ -446,7 +462,7 @@ private String getPlayerIconUrl ()
 		case NORMAL:
 			return "https://oldschool.runescape.wiki/images/thumb/Grand_Exchange_logo.png/225px-Grand_Exchange_logo.png?88cff";
 		default:
-			return null;
+			return "";
 		}
 	}
 
@@ -571,7 +587,7 @@ public void sendMessage ( String itemName, Integer bossKC, String npcName, Strin
 	embedsObject.put( "title", screenshotString );
 	
 	JSONObject thumbnailObject = new JSONObject();
-	if ( itemImageURL != null )
+	if ( ! Objects.equals( itemImageURL, "" ) )
 		{
 		thumbnailObject.put( "url", itemImageURL );
 		embedsObject.put( "thumbnail", thumbnailObject );
@@ -635,7 +651,8 @@ public void sendMessage ( String itemName, Integer bossKC, String npcName, Strin
 	
 	footerObject.put( "text", footerString );
 	embedsObject.put( "footer", footerObject );
-	sendWebhook( webhookObject.toString(), send );
+	CompletableFuture.runAsync(()->sendWebhook( webhookObject.toString(), send ));
+//	System.out.println( webhookObject );
 	}
 
 public void sendWebhook ( String embedsObject, boolean send )
@@ -671,16 +688,16 @@ public void sendWebhook ( String embedsObject, boolean send )
 			{
 			if ( ! send && betterDiscordLootLoggerPanel.before != null )
 				{
-				sendWebhookWithBuffer( url, requestBodyBuilder, betterDiscordLootLoggerPanel.before );
+				CompletableFuture.runAsync(()->sendWebhookWithBuffer( url, requestBodyBuilder, betterDiscordLootLoggerPanel.before ) );
 				}
 			else
 				{
-				sendWebhookWithScreenshot( url, requestBodyBuilder );
+				CompletableFuture.runAsync(()->sendWebhookWithScreenshot( url, requestBodyBuilder) );
 				}
 			}
 		else
 			{
-			buildRequestAndSend( url, requestBodyBuilder );
+			CompletableFuture.runAsync(()->buildRequestAndSend( url, requestBodyBuilder) );
 			}
 		}
 	}
@@ -703,7 +720,7 @@ public void sendWebhookWithScreenshot ( HttpUrl url, MultipartBody.Builder reque
 		
 		requestBodyBuilder.addFormDataPart( "file", "image.png",
 				RequestBody.create( MediaType.parse( "image/png" ), imageBytes ) );
-		buildRequestAndSend( url, requestBodyBuilder );
+		CompletableFuture.runAsync(()->buildRequestAndSend( url, requestBodyBuilder) );
 		
 		
 		} );
@@ -732,7 +749,7 @@ private void buildRequestAndSend ( HttpUrl url, MultipartBody.Builder requestBod
 	{
 	RequestBody requestBody = requestBodyBuilder.build();
 	Request request = new Request.Builder().url( url ).post( requestBody ).build();
-	sendRequest( request );
+	sendRequest( request  );
 //		System.out.println(request);
 	}
 
@@ -740,13 +757,13 @@ private void sendRequest ( Request request )
 	{
 	okHttpClient.newCall( request ).enqueue( new Callback() {
 		@Override
-		public void onFailure ( Call call, IOException e )
+		public void onFailure ( @NotNull Call call, @NotNull IOException e )
 			{
 			log.debug( "Error submitting webhook", e );
 			}
 		
 		@Override
-		public void onResponse ( Call call, Response response ) throws IOException
+		public void onResponse ( @NotNull Call call, @NotNull Response response ) throws IOException
 			{
 			response.close();
 			}

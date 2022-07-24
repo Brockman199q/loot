@@ -30,7 +30,7 @@ import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
 
 
-@ConfigGroup("discordsplittracker")
+@ConfigGroup("betterdiscordlootlogger")
 public interface BetterDiscordLootLoggerConfig extends Config {
     @ConfigSection(
             name = "Choose what to send",

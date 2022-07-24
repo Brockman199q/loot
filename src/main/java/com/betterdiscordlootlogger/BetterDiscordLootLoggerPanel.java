@@ -14,6 +14,7 @@ import java.awt.event.FocusListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 import static com.betterdiscordlootlogger.ApiTools.*;
 import static java.util.Objects.requireNonNull;
@@ -29,13 +30,15 @@ final JTextField splitMembers = new JTextField();
 JPanel womPanel = new JPanel();
 JLabel lblGetGroupId = new JLabel();
 JComboBox<Object> groupComboBox = new JComboBox<>();
-JComboBox memberList = new JComboBox();
+JComboBox<Object> memberList = new JComboBox<>();
 
+JButton btnRefresh = new JButton();
 
 private final Client client;
 public BufferedImage before;
 
 ImageIcon icon = new ImageIcon();
+
 
 
 @SneakyThrows
@@ -268,18 +271,21 @@ BetterDiscordLootLoggerPanel ( BetterDiscordLootLoggerPlugin betterDiscordLootLo
 		     ! itemName.getText().contains( "Item Name" ) )
 			{
 			submitInfo.setFocusable( true );
-			try
+			CompletableFuture.runAsync(()->
 				{
-				betterDiscordLootLoggerPlugin.sendMessage( itemName.getText(), null, npcName.getText(),
-						splitValue.getText(), "Split Loot", getWikiIcon( itemName.getText() ), splitMembers.getText(),
-						false );
-				}
-			catch (IOException | InterruptedException ex)
-				{
-				throw new RuntimeException( ex );
-				}
+				try
+					{
+					betterDiscordLootLoggerPlugin.sendMessage( itemName.getText(), null, npcName.getText(),
+							splitValue.getText(), "Split Loot", getWikiIcon( itemName.getText() ), splitMembers.getText(),
+							false );
+					}
+				catch (IOException | InterruptedException ex)
+					{
+					throw new RuntimeException( ex );
+					}
+				} );
 			submitInfo.setText(
-					"Sent screenshot with the following:\nSplit Value: " + splitValue.getText() + "\nSplit Members: " +
+					"Sent screenshot with the following:\nNPC name: " + npcName.getText() + "\nItem Name: " + itemName.getText() + splitValue.getText() + "\nSplit Members: " +
 					splitMembers.getText() );
 			npcName.setText( "Boss/NPC Name" );
 			itemName.setText( "Item Name" );
@@ -287,17 +293,15 @@ BetterDiscordLootLoggerPanel ( BetterDiscordLootLoggerPlugin betterDiscordLootLo
 			splitMembers.setText( "Split with (Player Names)" );
 			submitInfo.setVisible( true );
 			}
-		else if ( npcName.getText().equals( "Boss/NPC Name" ) && itemName.getText().equals( "Item Name" ) &&
-		          splitMembers.getText().contains( "Split with" ) && splitValue.getText().contains( "Split Value" ) )
+		else if ( npcName.getText().equals( "Boss/NPC Name" ) && itemName.getText().equals( "Item Name" ) )
 			{
-			submitInfo.setText( "Could not get Item or Split Information. Please try again after receiving loot." );
+			submitInfo.setText( "Could not get Item Information. Please try again after receiving loot." );
 			submitInfo.setEditable( false );
 			}
-		else if ( npcName.getText().equals( "Boss/NPC Name" ) && itemName.getText().equals( "Item Name" ) &&
-		          splitMembers.getText().contains( "Split with" ) || splitValue.getText().contains( "Split Value" ) )
+		else if ( splitMembers.getText().contains( "Split with" ) && splitValue.getText().contains( "Split Value" ) )
 			{
-			betterDiscordLootLoggerPlugin.sendMessage( itemName.getText(), null, "", "", "Manual Upload", "", "",
-					false );
+			CompletableFuture.runAsync(()-> betterDiscordLootLoggerPlugin.sendMessage( itemName.getText(), null, "", "", "Manual Upload", "", "",
+					false ));
 			submitInfo.setText(
 					"Sent screenshot with the following:\nNPC name: " + npcName.getText() + "\nItem Name: " +
 					itemName.getText() );
@@ -309,15 +313,18 @@ BetterDiscordLootLoggerPanel ( BetterDiscordLootLoggerPlugin betterDiscordLootLo
 			}
 		else
 			{
-			try
+			CompletableFuture.runAsync(()->
 				{
-				betterDiscordLootLoggerPlugin.sendMessage( itemName.getText(), null, npcName.getText(), "",
-						"Manual Upload", getWikiIcon( itemName.getText() ), "", false );
-				}
-			catch (IOException | InterruptedException ex)
-				{
-				throw new RuntimeException( ex );
-				}
+				try
+					{
+					betterDiscordLootLoggerPlugin.sendMessage( itemName.getText(), null, npcName.getText(), "",
+							"Manual Upload", getWikiIcon( itemName.getText() ), "", false );
+					}
+				catch (IOException | InterruptedException ex)
+					{
+					throw new RuntimeException( ex );
+					}
+				} );
 			npcName.setText( "Boss/NPC Name" );
 			itemName.setText( "Item Name" );
 			splitValue.setText( "Split Value (Per-Player)" );
@@ -510,28 +517,51 @@ private void runBuilder ()
 	gbc_btnAddMember.gridy = 3;
 	btnAddMember.setForeground( Color.WHITE );
 	womPanel.add( btnAddMember, gbc_btnAddMember );
-	refreshPanel( womPanel, groupComboBox, memberList, lblGetGroupId );
+	refreshPanel( womPanel, groupComboBox, memberList, lblGetGroupId, btnRefresh );
 	btnRefresh.addActionListener( e ->
-		{
-		try
-			{
-			int groupIndex = groupComboBox.getSelectedIndex();
-			int groupId = Integer.parseInt( String.valueOf( (groupComboBox.getSelectedItem()) ) );
+			SwingUtilities.invokeLater(()->
+				{
+				int groupIndex = 0;
+				if ( Objects.equals( btnRefresh.getText(), "Search" ) )
+					{
+					groupIndex = groupComboBox.getSelectedIndex();
+					}
+				int groupId = Integer.parseInt( String.valueOf( (groupComboBox.getSelectedItem()) ) );
+				groupComboBox.removeAllItems();
+				try
+					{
+					groupComboBox.setModel( new DefaultComboBoxModel<>(
+							requireNonNull( getWomGroupIds( requireNonNull( client.getLocalPlayer().getName() ) ) ) ) );
+					}
+				catch (IOException | InterruptedException ex)
+					{
+					throw new RuntimeException( ex );
+					}
 			memberList.removeAllItems();
-			memberList.setModel( new DefaultComboBoxModel<>( Objects.requireNonNull( getGroupMembers( groupId ) ) ) );
-			groupComboBox.removeAllItems();
-			groupComboBox.setModel( new DefaultComboBoxModel<>(
-					requireNonNull( getWomGroupIds( requireNonNull( client.getLocalPlayer().getName() ) ) ) ) );
-			String clanName = getClanName( groupId );
-			lblGetGroupId.setText( clanName );
-			groupComboBox.setSelectedIndex( groupIndex );
+				int finalGroupIndex = groupIndex;
+				CompletableFuture.runAsync(()-> {
+			try
+				{
+				memberList.setModel( new DefaultComboBoxModel<>( Objects.requireNonNull( getGroupMembers( groupId ) ) ) );
+				}
+			catch (IOException | InterruptedException ex)
+				{
+				throw new RuntimeException( ex );
+				}
+			
+			try
+				{
+				String clanName = getClanName( groupId );
+				lblGetGroupId.setText( clanName );
+				}
+			catch (IOException | InterruptedException ex)
+				{
+				throw new RuntimeException( ex );
+				}
+			groupComboBox.setSelectedIndex( finalGroupIndex );
 			btnRefresh.setText( "Search" );
-			}
-		catch (IOException | InterruptedException ex)
-			{
-			throw new RuntimeException( ex );
-			}
-		} );
+			});
+		}));
 	btnAddMember.addActionListener( e ->
 		{
 		if ( splitMembers.getText().contains( "Split with" ) )
@@ -547,18 +577,20 @@ private void runBuilder ()
 		} );
 	}
 
-public void refreshPanel ( JPanel womPanel, JComboBox<Object> groupComboBox, JComboBox memberList, JLabel lblGetGroupId )
+public void refreshPanel ( JPanel womPanel, JComboBox<Object> groupComboBox, JComboBox<Object> memberList, JLabel lblGetGroupId, JButton btnRefresh )
 	{
+	SwingUtilities.invokeLater( ()-> {
+	this.womPanel = womPanel;
+	this.groupComboBox = groupComboBox;
+	this.memberList = memberList;
+	this.lblGetGroupId = lblGetGroupId;
+	this.btnRefresh = btnRefresh;
+	CompletableFuture.runAsync(()-> {
 	try
 		{
-		this.womPanel = womPanel;
-		this.groupComboBox = groupComboBox;
-		this.memberList = memberList;
-		this.lblGetGroupId = lblGetGroupId;
 		groupComboBox.setModel( new DefaultComboBoxModel<>(
 				requireNonNull( getWomGroupIds( requireNonNull( client.getLocalPlayer().getName() ) ) ) ) );
 		int groupId = Integer.parseInt( String.valueOf( (groupComboBox.getSelectedItem()) ) );
-		memberList.setModel( new DefaultComboBoxModel<>( Objects.requireNonNull( getGroupMembers( groupId ) ) ) );
 		String clanName = getClanName( groupId );
 		lblGetGroupId.setText( clanName );
 		}
@@ -566,7 +598,21 @@ public void refreshPanel ( JPanel womPanel, JComboBox<Object> groupComboBox, JCo
 		{
 		throw new RuntimeException( ex );
 		}
+	try
+		{
+		int groupId = Integer.parseInt( String.valueOf( (groupComboBox.getSelectedItem()) ) );
+		memberList.setModel( new DefaultComboBoxModel<>( Objects.requireNonNull( getGroupMembers( groupId ) ) ) );
+		}
+	catch (IOException | InterruptedException ex)
+		{
+		throw new RuntimeException( ex );
+		}
+	btnRefresh.setText( "Search" );
+	});
+		
+	});
 	}
+	
 }
 
 
