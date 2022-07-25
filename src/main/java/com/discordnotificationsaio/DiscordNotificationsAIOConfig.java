@@ -64,7 +64,6 @@ public interface DiscordNotificationsAIOConfig extends Config {
         @ConfigSection(name = "Valuable Loot", description = "Options for Valuable Loot Notifications", position = 5)
         String valuableLootSection = "valuable loot options";
         
-        
 
         @ConfigItem(keyName = "sendScreenshot", name = "Send Screenshot?", description = "Include a screenshot in the discord message?", position = 6, section = valuableLootSection)
         default boolean sendScreenshot() {
@@ -78,7 +77,7 @@ public interface DiscordNotificationsAIOConfig extends Config {
 
         @ConfigItem(keyName = "bingoString", name = "Custom Bingo/Event String", description = "Insert your custom event here.", position = 8, section = valuableLootSection)
         default String bingoString() {
-                return "#ABC123";
+                return "ABC123";
         }
 
         @ConfigItem(keyName = "valuableDrop", name = "Include Valuable drops", description = "Configures whether valuable drops will be automatically sent to discord.", position = 9, section = valuableLootSection)
@@ -107,7 +106,7 @@ public interface DiscordNotificationsAIOConfig extends Config {
                 position = 12
         )
         default boolean includeLevelling() {
-        return false;
+        return true;
         }
         
         @ConfigItem(
@@ -169,7 +168,7 @@ public interface DiscordNotificationsAIOConfig extends Config {
                 position = 18
         )
         default boolean sendLevellingScreenshot() {
-        return false;
+        return true;
         }
         // End levelling config section
         
@@ -189,7 +188,7 @@ public interface DiscordNotificationsAIOConfig extends Config {
                 section = questingConfig
         )
         default boolean includeQuestComplete() {
-        return false;
+        return true;
         }
         
         @ConfigItem(
@@ -209,7 +208,7 @@ public interface DiscordNotificationsAIOConfig extends Config {
                 position = 21
         )
         default boolean sendQuestingScreenshot() {
-        return false;
+        return true;
         }
         // End questing config section
         
@@ -229,7 +228,7 @@ public interface DiscordNotificationsAIOConfig extends Config {
                 section = deathConfig,
                 position = 23
         )
-        default boolean includeDeath() { return false; }
+        default boolean includeDeath() { return true; }
         
         @ConfigItem(
                 keyName = "deathMessage",
@@ -248,7 +247,7 @@ public interface DiscordNotificationsAIOConfig extends Config {
                 position = 25
         )
         default boolean sendDeathScreenshot() {
-        return false;
+        return true;
         }
         // End death config section
         
@@ -268,7 +267,7 @@ public interface DiscordNotificationsAIOConfig extends Config {
                 section = clueConfig,
                 position = 27
         )
-        default boolean includeClue() { return false; }
+        default boolean includeClue() { return true; }
         
         @ConfigItem(
                 keyName = "clueMessage",
@@ -287,7 +286,7 @@ public interface DiscordNotificationsAIOConfig extends Config {
                 position = 29
         )
         default boolean sendClueScreenshot() {
-        return false;
+        return true;
         }
         // End clue config section
         
@@ -307,7 +306,7 @@ public interface DiscordNotificationsAIOConfig extends Config {
                 section = petConfig,
                 position = 31
         )
-        default boolean setPets() { return false; }
+        default boolean setPets() { return true; }
         
         @ConfigItem(
                 keyName = "petMessage",
@@ -326,7 +325,7 @@ public interface DiscordNotificationsAIOConfig extends Config {
                 position = 33
         )
         default boolean sendPetScreenshot() {
-        return false;
+        return true;
         }
         
         // Collection Log config section
@@ -345,7 +344,7 @@ public interface DiscordNotificationsAIOConfig extends Config {
                 section = collectionLogConfig,
                 position = 35
         )
-        default boolean setCollectionLogs() { return false; }
+        default boolean setCollectionLogs() { return true; }
         
         @ConfigItem(
                 keyName = "collectionLogMessage",
@@ -364,7 +363,7 @@ public interface DiscordNotificationsAIOConfig extends Config {
                 position = 37
         )
         default boolean sendCollectionLogScreenshot() {
-        return false;
+        return true;
         }
 
         @ConfigSection(name = "Advanced", description = "Advanced/Experimental Options", position = 150)
