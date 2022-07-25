@@ -394,7 +394,7 @@ public interface DiscordNotificationsAIOConfig extends Config {
         default boolean codeBlocks() {
                 return true;
         }
-
+        
         // @ConfigItem(
         // keyName = "partyNames",
         // name = "Experimental Party Integration",
