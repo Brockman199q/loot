@@ -861,103 +861,113 @@ private ClientThread clientThread;
 		this.bossName = npcName;
 		this.itemValue = itemValue;
 		this.notificationType = notificationType;
-		String codeBlocks = "";
-
-		if (config.codeBlocks()) {
-			codeBlocks = "`";
-		} else
-			codeBlocks = "";
-
-		if (! shouldSendLootMessage ) {
-			return;
+	String codeBlocksGreenStart = "";
+	String codeBlocksYellowStart = "";
+	String codeBlocksOrangeStart = "";
+	String codeBlocksRedStart = "";
+	String codeBlocksEnd = "";
+	String bold = "**";
+	if (config.codeBlocks()) {
+	codeBlocksGreenStart = "```glsl\n";
+	codeBlocksYellowStart = "```fix\n";
+	codeBlocksOrangeStart = "```elm\n";
+	codeBlocksRedStart = "```diff\n";
+	codeBlocksEnd = "\n```";
+	bold = "";
+	} else
+		{
+		codeBlocksGreenStart = "";
+		codeBlocksYellowStart = "";
+		codeBlocksOrangeStart = "";
+		codeBlocksRedStart = "";
+		codeBlocksEnd = "";
 		}
-
-		switch (notificationType) {
-			case "Split Loot":
-				break;
-			case "Pet":
-				itemName = "a new pet!";
-				break;
-			// case "valuable drop":
-			// itemName = "a valuable drop: **" + itemName + "**!";
-			// break;
-			case "Collection Log":
-				itemName = "a new collection log item: " + itemName + "!";
-				break;
-			case "Loot Received":
-				itemName = "a rare drop from " + npcName + ": " + itemName + "!";
-				break;
-			default:
-				notificationType = "Manual Upload";
-				itemName = "a screenshot";
-				break;
-		}
-
-		String screenshotString = client.getLocalPlayer().getName();
-
-		String valueMessage = null;
-		if (!itemValue.isEmpty()) {
-			screenshotString += " just received " + itemName;
-			valueMessage = itemValue + " gp";
-		} else if (!itemName.isEmpty()) {
-			screenshotString += " just posted " + itemName;
-		} else {
-			screenshotString += " just received " + itemName;
-		}
-		SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd");
-		String playerName = client.getLocalPlayer().getName();
-
-		JSONObject webhookObject = new JSONObject();
-		JSONArray embedsArray = new JSONArray();
-
-		JSONObject embedsObject = new JSONObject();
-		JSONObject authorObject = new JSONObject();
-		authorObject.put("icon_url", playerIconUrl);
-		embedsObject.put("author", authorObject);
-		authorObject.put("name", notificationType + " - " + playerName);
-		embedsObject.put("title", screenshotString);
-
-		JSONObject thumbnailObject = new JSONObject();
-		if (!Objects.equals(itemImageURL, "")) {
-			thumbnailObject.put("url", itemImageURL);
-			embedsObject.put("thumbnail", thumbnailObject);
-		}
-		embedsArray.put(embedsObject);
-		webhookObject.put("embeds", embedsArray);
-		JSONArray fieldsArray = new JSONArray();
-		embedsObject.putOnce("fields", fieldsArray);
-		embedsObject.putOnce("color", colorCode);
-		JSONObject footerObject = new JSONObject();
-		StringBuilder footerString = new StringBuilder(String.format("Date: %s", sdfDate.format(new Date())));
-
-		if (!itemValue.isEmpty()) {
-			if (!notificationType.equals("Split Loot")) {
-				embedsObject.put("description", "**Value: **" + codeBlocks + valueMessage + codeBlocks);
-			} else {
-				embedsObject.put("description", "**Split Value: **" + codeBlocks + valueMessage + codeBlocks);
-			}
-		}
-
-		JSONObject customField = new JSONObject();
-		JSONObject bingoField = new JSONObject();
-		JSONObject splitField = new JSONObject();
-
-		if (config.includeBingo() && !Objects.equals(config.bingoString(), "")) {
-			String bingoString = config.bingoString();
-
-			bingoField.put("name", "Bingo String").put("value", codeBlocks + bingoString + codeBlocks).put("inline", true);
-			fieldsArray.put(bingoField);
-		}
-
-		if (!config.customValue().equals("")) {
-			customField.put("name", config.customField()).put("value", codeBlocks + config.customValue() + codeBlocks).put("inline", true);
-			fieldsArray.put(customField);
-		}
-
-		if (!Objects.equals(splitMembers, "")) {
-			splitField.put("name", "Split With").put("value", codeBlocks + splitMembers + codeBlocks).put("inline", true);
-			fieldsArray.put(splitField);
-		}
+	
+	if (! shouldSendLootMessage ) {
+	return;
+	}
+	
+	switch (notificationType) {
+	case "Split Loot":
+		break;
+	case "Loot Received":
+		itemName = "a rare drop from " + npcName + ": " + itemName;
+		break;
+	default:
+		notificationType = "Manual Upload";
+		itemName = "a screenshot";
+		break;
+	}
+	
+	String screenshotString = client.getLocalPlayer().getName();
+	
+	String valueMessage = null;
+	if (!itemValue.isEmpty()) {
+	screenshotString += " just received " + itemName + "!";
+	valueMessage = itemValue + " gp";
+	} else if (!itemName.isEmpty()) {
+	screenshotString += " just posted " + itemName + "!";
+	} else {
+	screenshotString += " just received " + itemName + "!";
+	}
+	SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd");
+	String playerName = client.getLocalPlayer().getName();
+	
+	JSONObject webhookObject = new JSONObject();
+	JSONArray embedsArray = new JSONArray();
+	
+	JSONObject embedsObject = new JSONObject();
+	JSONObject authorObject = new JSONObject();
+	authorObject.put("icon_url", playerIconUrl);
+	embedsObject.put("author", authorObject);
+	authorObject.put("name", notificationType + " - " + playerName);
+	embedsObject.put("title", screenshotString);
+	
+	JSONObject thumbnailObject = new JSONObject();
+	if (!Objects.equals(itemImageURL, "")) {
+	thumbnailObject.put("url", itemImageURL);
+	embedsObject.put("thumbnail", thumbnailObject);
+	}
+	embedsArray.put(embedsObject);
+	webhookObject.put("embeds", embedsArray);
+	JSONArray fieldsArray = new JSONArray();
+	embedsObject.putOnce("fields", fieldsArray);
+	embedsObject.putOnce("color", colorCode);
+	JSONObject footerObject = new JSONObject();
+	StringBuilder footerString = new StringBuilder(String.format("Date: %s", sdfDate.format(new Date())));
+	
+	if (!itemValue.isEmpty()) {
+	if (!notificationType.equals("Split Loot")) {
+	String descriptionText = codeBlocksGreenStart + bold + "Value: " + bold + valueMessage + codeBlocksEnd;
+//	if (!rarity.equals(0.0f)) descriptionText = descriptionText + codeBlocksGreenStart + rarity + codeBlocksEnd;
+	embedsObject.put("description", descriptionText);
+	} else {
+	String descriptionText = codeBlocksGreenStart + bold +"Split Value: " + bold + valueMessage + codeBlocksEnd;
+//	if (!rarity.equals(0.0f)) descriptionText = descriptionText + codeBlocksGreenStart + rarity + codeBlocksEnd;
+	embedsObject.put("description", descriptionText);
+	}
+	}
+	
+	JSONObject customField = new JSONObject();
+	JSONObject bingoField = new JSONObject();
+	JSONObject splitField = new JSONObject();
+	
+	if (config.includeBingo() && !Objects.equals(config.bingoString(), "")) {
+	String bingoString = config.bingoString();
+	
+	bingoField.put("name", "Bingo String").put("value", codeBlocksGreenStart + bingoString + codeBlocksEnd).put("inline", true);
+	fieldsArray.put(bingoField);
+	}
+	
+	if (!config.customValue().equals("")) {
+	customField.put("name", config.customField()).put("value", codeBlocksYellowStart + config.customValue() + codeBlocksEnd).put("inline", true);
+	fieldsArray.put(customField);
+	}
+	
+	if (!Objects.equals(splitMembers, "")) {
+	splitField.put("name", "Split With").put("value", codeBlocksYellowStart + splitMembers + codeBlocksEnd).put("inline", true);
+	fieldsArray.put(splitField);
+	}
 
 		if (!Objects.equals(npcName, "")) {
 			try {
