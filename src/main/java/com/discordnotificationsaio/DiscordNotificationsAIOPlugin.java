@@ -952,7 +952,7 @@ public class DiscordNotificationsAIOPlugin extends Plugin {
 	if (config.includeBingo() && !Objects.equals(config.bingoString(), "")) {
 	String bingoString = config.bingoString();
 	
-	bingoField.put("name", "Bingo String").put("value", codeBlocksGreenStart + "#" + bingoString + codeBlocksEnd).put("inline", true);
+	bingoField.put("name", "Event String").put("value", codeBlocksGreenStart + "#" + bingoString + codeBlocksEnd).put("inline", true);
 	fieldsArray.put(bingoField);
 	}
 	
