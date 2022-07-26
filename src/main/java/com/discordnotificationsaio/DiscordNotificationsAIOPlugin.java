@@ -60,7 +60,6 @@ import org.json.JSONObject;
 
 import javax.imageio.ImageIO;
 import javax.inject.Inject;
-import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -80,7 +79,7 @@ import static net.runelite.http.api.RuneLiteAPI.GSON;
 @PluginDescriptor(name = "Discord Notifications/Split Tracker")
 public class DiscordNotificationsAIOPlugin extends Plugin {
 	private static final String COLLECTION_LOG_TEXT = "New item added to your collection log: ";
-
+	
 	private static final Pattern KC_PATTERN = Pattern.compile(
 			"Your (?<pre>completion count for |subdued |completed )?(?<boss>.+?) (?<post>(?:(?:kill|harvest|lap|completion) )?(?:count )?)is: <col=ff0000>(?<kc>\\d+)</col>");
 	// private Map<String, String> lastValuableDropItems;
@@ -127,8 +126,8 @@ public class DiscordNotificationsAIOPlugin extends Plugin {
 	public DrawManager drawManager;
 	@Inject
 	public ConfigManager configManager;
-private RarityChecker rarityChecker;
-private ClientThread clientThread;
+	
+	private ClientThread clientThread;
 
 @Provides
 	DiscordNotificationsAIOConfig provideConfig( ConfigManager configManager) {
@@ -580,19 +579,17 @@ private ClientThread clientThread;
 		}
 	}
 
-	private ItemData EnrichItem(int itemId)
-		{
-		ItemData r = new ItemData();
-		r.ItemId = itemId;
-		r.GePrice = itemManager.getItemPrice(itemId);
-		r.HaPrice = itemManager.getItemComposition(itemId).getHaPrice();
-		
-		if(log.isDebugEnabled()){
-		log.debug( MessageFormat.format("Item {0} prices HA{1}, GE{2}", itemId, r.HaPrice, r.GePrice));
-		}
-		
-		return r;
-		}
+//	private ItemRarity EnrichItem( int itemId)
+//		{
+//		ItemRarity r = new ItemRarity();
+//		r.ItemId = itemId;
+//
+//		if(log.isDebugEnabled()){
+//		log.debug( MessageFormat.format("Item {0} prices HA{1}, GE{2}", itemId));
+//		}
+//
+//		return r;
+//		}
 	
 //	private CompletableFuture<Boolean> processNpcNotification(NPC npc, int itemId, int quantity, float rarity)
 //		{
