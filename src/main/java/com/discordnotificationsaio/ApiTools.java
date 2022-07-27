@@ -1,5 +1,7 @@
 package com.discordnotificationsaio;
 
+import com.discordnotificationsaio.rarity.Drop;
+import com.discordnotificationsaio.rarity.Monster;
 import com.discordnotificationsaio.wiki.WikiItem;
 import com.discordnotificationsaio.wiseoldman.Groups;
 import com.google.gson.Gson;
@@ -8,8 +10,15 @@ import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.swing.*;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.IntStream;
@@ -122,4 +131,22 @@ public static String getClanName ( int groupId ) throws IOException, Interrupted
 //        System.out.println(resJson.getName());
 	return resJson.getName();
 	}
+	
+
+public static String getItemRarity (ArrayList<Monster> mobs, String npcName, String itemName) throws IOException
+	{
+	
+	final String[] rarity = new String[1];
+	Optional<Monster> killed = mobs.stream().filter( monster -> monster.getId().equals(npcName)).findFirst();
+	killed.ifPresent(k ->
+		{
+		Optional<Drop> dropped = k.getDrops().stream().filter( drop -> drop.getName().equals(itemName)).findFirst();
+//		dropped.ifPresent(drop -> System.out.println("\n\nRarity of " + drop.getName() + " from " + npcName + " is " + drop.getRarity()));
+		dropped.ifPresent( drop -> rarity[0] = (drop.getRarity()));
+		if( ! Objects.equals( rarity[0], "Always" ) ) rarity[0]=rarity[0].split("/")[1];
+		});
+	if (rarity[0] == null) return "";
+	return rarity[0];
+	}
+
 }
