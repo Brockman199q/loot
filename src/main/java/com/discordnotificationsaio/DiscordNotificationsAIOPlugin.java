@@ -514,6 +514,7 @@ public void onNpcLootReceived ( NpcLootReceived event ) throws IOException, Inte
 							sendLootMessage( itemName, lastBossKC == - 1 ? null : getKc( playerName, lastBossKill ), npcName,
 									Integer.toString( value ), "Loot Received", thumbnailUrl.get(), "", finalRarity,
 									config.autoLog() );
+							unsetKc( lastBossKill );
 							}
 						}
 					catch (IOException | InterruptedException e)
@@ -540,6 +541,7 @@ public void onNpcLootReceived ( NpcLootReceived event ) throws IOException, Inte
 					sendLootMessage( itemName, lastBossKC == - 1 ? null : getKc( playerName, lastBossKill ), npcName,
 							Integer.toString( value ), "Loot Received", thumbnailUrl.get(), "", finalRarity,
 							config.autoLog() );
+					unsetKc( lastBossKill );
 					} );
 				}
 			}
@@ -587,7 +589,7 @@ public void onLootReceived ( LootReceived lootReceived )
 			String itemName = itemManager.getItemComposition( itemId ).getName();
 			dataToPanel( npcName, itemName );
 			final String[] rarity = {""};
-			if ( config.includeRarity() && config.rarityThreshold() <= Integer.parseInt( rarity[0] ))
+			if ( config.includeRarity() )
 				{
 				CompletableFuture.runAsync( () ->
 					{
@@ -597,11 +599,12 @@ public void onLootReceived ( LootReceived lootReceived )
 						{
 						thumbnailUrl.set( getWikiIcon( itemName ) );
 						String finalRarity = rarity[0];
-						if ( Integer.parseInt( rarity[0] ) >= config.rarityThreshold() )
+//						if ( Integer.parseInt( rarity[0] ) >= config.rarityThreshold() )
 							{
 							sendLootMessage( itemName, lastBossKC == - 1 ? null : getKc( playerName, lastBossKill ), npcName,
 									Integer.toString( value ), "Loot Received", thumbnailUrl.get(), "", finalRarity,
 									config.autoLog() );
+							unsetKc( lastBossKill );
 							}
 						}
 					catch (IOException | InterruptedException e)
@@ -630,6 +633,7 @@ public void onLootReceived ( LootReceived lootReceived )
 					sendLootMessage( itemName, lastBossKC == - 1 ? null : getKc( playerName, lastBossKill ), npcName,
 							Integer.toString( value ), "Loot Received", thumbnailUrl.get(), "", finalRarity,
 							config.autoLog() );
+					unsetKc( lastBossKill );
 					} );
 				}
 			}
@@ -773,6 +777,7 @@ public void onChatMessage ( ChatMessage event )
 						"Loot Received",
 						"https://oldschool.runescape.wiki/images/thumb/Metamorphic_dust_detail.png/150px-Metamorphic_dust_detail.png",
 						"", "400", true );
+				unsetKc( "cox cm" );
 				}
 			}
 		if ( message.startsWith( COX_KIT_MESSAGE_TEXT ) )
@@ -787,6 +792,7 @@ public void onChatMessage ( ChatMessage event )
 						"Chambers of Xeric: Challenge Mode", "", "Loot Received",
 						"https://oldschool.runescape.wiki/images/thumb/Metamorphic_dust_detail.png/150px-Metamorphic_dust_detail.png",
 						"", "75", true );
+				unsetKc( "cox cm" );
 				}
 			}
 		
@@ -799,8 +805,9 @@ public void onChatMessage ( ChatMessage event )
 			if ( lootRecipient.equals( Text.sanitize( Objects.requireNonNull( client.getLocalPlayer().getName() ) ) ) )
 				{
 				itemName = dropName;
-				sendLootMessage( itemName, getKc( playerName, "Theatre of Blood" ), "Theatre of Blood", "",
+				sendLootMessage( itemName, getKc( playerName, "Theatre of blood" ), "Theatre of Blood", "",
 						"Loot Received", "", "", "", true );
+				unsetKc( "Theatre of blood" );
 				}
 			}
 		}
