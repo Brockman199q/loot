@@ -10,7 +10,7 @@ repositories {
 	mavenCentral()
 }
 
-def runeLiteVersion = '1.8.28'
+def runeLiteVersion = '1.8.30'
 
 dependencies {
 	implementation('com.google.apis:google-api-services-sheets:v4-rev581-1.25.0')
@@ -24,10 +24,9 @@ dependencies {
 				exclude group: 'commons-codec'
 			}
 	implementation 'org.json:json:20200518'
-	implementation 'org.jetbrains:annotations:23.0.0'
 
+	compileOnly 'org.jetbrains:annotations:23.0.0'
 	compileOnly group: 'net.runelite', name:'client', version: runeLiteVersion
-
 	compileOnly 'org.projectlombok:lombok:1.18.20'
 	annotationProcessor 'org.projectlombok:lombok:1.18.20'
 
