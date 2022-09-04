@@ -31,7 +31,10 @@ public static String getWikiIcon ( String itemName ) throws IOException, Interru
 			"https://oldschool.runescape.wiki/api.php?action=query&format=json&formatversion=2&prop=pageimages&titles=" +
 			itemName.replace( " ", "_" ).replace( "%20", "_" );
 	OkHttpClient client = new OkHttpClient();
-	Request request = new Request.Builder().url( sURL ).build();
+	Request request = new Request.Builder()
+			.url( sURL )
+			.header("User-Agent", "skyhawkgaming/better-discord-loot-logger")
+			.build();
 	CompletableFuture<String> icon = new CompletableFuture<>();
 	CompletableFuture.supplyAsync( () ->
 		{
