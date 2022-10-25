@@ -951,7 +951,7 @@ private void sendQuestMessage ( String questName )
 	
 	NonLootWebhookBody nonLootWebhookBody = new NonLootWebhookBody();
 	nonLootWebhookBody.setContent( questMessageString );
-	sendNonLootWebhook( nonLootWebhookBody, config.sendQuestingScreenshot() );
+	sendNonLootWebhook( nonLootWebhookBody, config.sendQuestingScreenshot() , "quest");
 	}
 
 private void sendDeathMessage ()
@@ -971,7 +971,7 @@ private void sendDeathMessage ()
 	
 	NonLootWebhookBody nonLootWebhookBody = new NonLootWebhookBody();
 	nonLootWebhookBody.setContent( deathMessageString );
-	sendNonLootWebhook( nonLootWebhookBody, config.sendDeathScreenshot() );
+	sendNonLootWebhook( nonLootWebhookBody, config.sendDeathScreenshot(), "death" );
 	}
 
 private void sendClueMessage ()
@@ -991,7 +991,7 @@ private void sendClueMessage ()
 	
 	NonLootWebhookBody nonLootWebhookBody = new NonLootWebhookBody();
 	nonLootWebhookBody.setContent( clueMessage );
-	sendNonLootWebhook( nonLootWebhookBody, config.sendClueScreenshot() );
+	sendNonLootWebhook( nonLootWebhookBody, config.sendClueScreenshot(), "clue" );
 	}
 
 private void sendLevelMessage ()
@@ -1029,7 +1029,7 @@ private void sendLevelMessage ()
 	
 	NonLootWebhookBody nonLootWebhookBody = new NonLootWebhookBody();
 	nonLootWebhookBody.setContent( levelUpString );
-	sendNonLootWebhook( nonLootWebhookBody, config.sendLevellingScreenshot() );
+	sendNonLootWebhook( nonLootWebhookBody, config.sendLevellingScreenshot() , "level");
 	}
 
 private void sendPetMessage ()
@@ -1049,7 +1049,7 @@ private void sendPetMessage ()
 	
 	NonLootWebhookBody nonLootWebhookBody = new NonLootWebhookBody();
 	nonLootWebhookBody.setContent( petMessageString );
-	sendNonLootWebhook( nonLootWebhookBody, config.sendPetScreenshot() );
+	sendNonLootWebhook( nonLootWebhookBody, config.sendPetScreenshot(), "pet");
 	}
 
 private void sendCollectionLogMessage ( String itemName )
@@ -1071,7 +1071,7 @@ private void sendCollectionLogMessage ( String itemName )
 	
 	NonLootWebhookBody nonLootWebhookBody = new NonLootWebhookBody();
 	nonLootWebhookBody.setContent( collectionLogMessageString );
-	sendNonLootWebhook( nonLootWebhookBody, config.sendCollectionLogScreenshot() );
+	sendNonLootWebhook( nonLootWebhookBody, config.sendCollectionLogScreenshot(), "log" );
 	}
 
 public void sendLootMessage ( String itemName, Integer bossKC, String npcName, String itemValue, String notificationType, String itemImageURL, String splitMembers, String rarity, boolean send )
@@ -1258,19 +1258,19 @@ public void sendLootWebhook ( String embedsObject, boolean send )
 	String configUrl;
 	if ( send && config.autoLog() && config.autoWebHookToggle() )
 		{
-		configUrl = config.autoWebHook();
+		configUrl = config.valuableWebHookToggle() ? config.valuableWebHook() : config.autoWebHook();
 		}
 	else if ( ! send && config.autoWebHookToggle() )
 		{
-		configUrl = config.webhook();
+		configUrl = config.valuableWebHookToggle() ? config.valuableWebHook() : config.webhook();
 		}
 	else if ( Objects.equals( config.autoWebHook(), "" ) )
 		{
-		configUrl = config.webhook();
+		configUrl = config.valuableWebHookToggle() ? config.valuableWebHook() : config.webhook();
 		}
 	else
 		{
-		configUrl = config.webhook();
+		configUrl = config.valuableWebHookToggle() ? config.valuableWebHook() : config.webhook();
 		}
 	
 	if ( Strings.isNullOrEmpty( configUrl ) )
@@ -1345,20 +1345,42 @@ public void sendLootWebhookWithBuffer ( HttpUrl url, MultipartBody.Builder reque
 	buildRequestAndSend( url, requestBodyBuilder );
 	}
 
-private void sendNonLootWebhook ( NonLootWebhookBody discordWebhookBody, boolean sendScreenshot )
+private void sendNonLootWebhook ( NonLootWebhookBody discordWebhookBody, boolean sendScreenshot, String hookType )
 	{
 	String configUrl;
+
 	if ( config.autoLog() && config.autoWebHookToggle() )
 		{
-		configUrl = config.autoWebHook();
-		}
+			switch (hookType)
+			{
+				case "level":
+					configUrl = config.levelWebHookToggle() ? config.levelWebHook() : config.autoWebHook();
+					break;
+				case "quest":
+					configUrl = config.questWebHookToggle() ? config.questWebHook() : config.autoWebHook();
+					break;
+				case "death":
+					configUrl = config.deathWebHookToggle() ? config.deathWebHook() : config.autoWebHook();
+					break;
+				case "clue":
+					configUrl = config.clueWebHookToggle() ? config.clueWebHook() : config.autoWebHook();
+					break;
+				case "pet":
+					configUrl = config.petWebHookToggle() ? config.petWebHook() : config.autoWebHook();
+					break;
+				case "log":
+					configUrl = config.logWebHookToggle() ? config.logWebHook() : config.autoWebHook();
+					break;
+				default:
+					configUrl = config.autoWebHook();
+			}		}
 	else if ( config.autoWebHookToggle() )
 		{
-		configUrl = config.webhook();
+			configUrl = getString(hookType);
 		}
 	else if ( Objects.equals( config.autoWebHook(), "" ) )
 		{
-		configUrl = config.webhook();
+			configUrl = getString(hookType);
 		}
 	else
 		{
@@ -1388,7 +1410,35 @@ private void sendNonLootWebhook ( NonLootWebhookBody discordWebhookBody, boolean
 		}
 	}
 
-private void sendNonLootWebhookWithScreenshot ( HttpUrl url, MultipartBody.Builder requestBodyBuilder )
+	private String getString(String hookType) {
+		String configUrl;
+		switch (hookType)
+		{
+			case "level":
+				configUrl = config.levelWebHookToggle() ? config.levelWebHook() : config.webhook();
+				break;
+			case "quest":
+				configUrl = config.questWebHookToggle() ? config.questWebHook() : config.webhook();
+				break;
+			case "death":
+				configUrl = config.deathWebHookToggle() ? config.deathWebHook() : config.webhook();
+				break;
+			case "clue":
+				configUrl = config.clueWebHookToggle() ? config.clueWebHook() : config.webhook();
+				break;
+			case "pet":
+				configUrl = config.petWebHookToggle() ? config.petWebHook() : config.webhook();
+				break;
+			case "log":
+				configUrl = config.logWebHookToggle() ? config.logWebHook() : config.webhook();
+				break;
+			default:
+				configUrl = config.webhook();
+		}
+		return configUrl;
+	}
+
+	private void sendNonLootWebhookWithScreenshot ( HttpUrl url, MultipartBody.Builder requestBodyBuilder )
 	{
 	drawManager.requestNextFrameListener( image ->
 		{

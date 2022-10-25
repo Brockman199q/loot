@@ -72,7 +72,7 @@ String collectionLogConfig = "collectionLogConfig";
 String advancedSection = "advanced";
 
 @ConfigItem (keyName = "webhook", name = "Default WebHook",
-             description = "The webhook used to send messages to Discord.", position = 1)
+             description = "The main webhook used to send messages to Discord.", position = 1)
 String webhook ();
 
 @ConfigItem (keyName = "autoLog", name = "Automatic Notifications",
@@ -145,6 +145,20 @@ default int rarityThreshold ()
 	return 1;
 	}
 
+	@ConfigItem (keyName = "valuableWebHookToggle", name = "Separate Loot WebHook?",
+			description = "Use a custom WebHook for Valuable Loot Notifications, separate from any other WebHooks.",
+			section = valuableLootSection,
+			position = 11)
+	default boolean valuableWebHookToggle ()
+	{
+		return false;
+	}
+
+	@ConfigItem (keyName = "valuableWebHook", name = "Valuable Loot WebHook",
+			description = "Secondary WebHook for Valuable Loot specifically.",
+			section = valuableLootSection, position = 11)
+	String valuableWebHook ();
+
 @ConfigItem (keyName = "includeLevelling", name = "Send Levelling Notifications",
              description = "Send messages when you level up a skill.", section = levellingConfig, position = 12)
 default boolean includeLevelling ()
@@ -193,6 +207,17 @@ default boolean sendLevellingScreenshot ()
 	{
 	return true;
 	}
+	@ConfigItem (keyName = "levelWebHookToggle", name = "Separate Level-Up WebHook?",
+			description = "Use a custom WebHook for Levelling Notifications, separate from any other WebHooks.", section = levellingConfig,
+			position = 19)
+	default boolean levelWebHookToggle ()
+	{
+		return false;
+	}
+
+	@ConfigItem (keyName = "levelWebHook", name = "Level-Up WebHook",
+			description = "Secondary WebHook for levelling up specifically.", section = levellingConfig, position = 20)
+	String levelWebHook ();
 
 @ConfigItem (keyName = "includeQuests", name = "Send Quest Notifications",
              description = "Send messages when you complete a quest.", section = questingConfig)
@@ -214,6 +239,18 @@ default boolean sendQuestingScreenshot ()
 	return true;
 	}
 
+	@ConfigItem (keyName = "questWebHookToggle", name = "Separate Quest WebHook?",
+			description = "Use a custom WebHook for Quest Notifications, separate from any other WebHooks.", section = questingConfig,
+			position = 22)
+	default boolean questWebHookToggle ()
+	{
+		return false;
+	}
+
+	@ConfigItem (keyName = "questWebHook", name = "Quest WebHook",
+			description = "Secondary WebHook for Quests specifically.", section = questingConfig, position = 23)
+	String questWebHook ();
+
 @ConfigItem (keyName = "includeDeaths", name = "Send Death Notifications",
              description = "Send messages when you die to discord.", section = deathConfig, position = 23)
 default boolean includeDeath () {return true;}
@@ -229,7 +266,18 @@ default boolean sendDeathScreenshot ()
 	{
 	return true;
 	}
-// End clue config section
+
+	@ConfigItem (keyName = "deathWebHookToggle", name = "Separate Death WebHook?",
+			description = "Use a custom WebHook for Death Notifications, separate from any other WebHooks.", section = deathConfig,
+			position = 26)
+	default boolean deathWebHookToggle ()
+	{
+		return false;
+	}
+
+	@ConfigItem (keyName = "deathWebHook", name = "Death WebHook",
+			description = "Secondary WebHook for Deaths specifically.", section = deathConfig, position = 27)
+	String deathWebHook ();
 
 @ConfigItem (keyName = "includeClues", name = "Send Clue Notifications",
              description = "Send messages when you complete a clue scroll.", section = clueConfig, position = 27)
@@ -247,6 +295,18 @@ default boolean sendClueScreenshot ()
 	return true;
 	}
 
+	@ConfigItem (keyName = "clueWebHookToggle", name = "Separate Clue WebHook?",
+			description = "Use a custom WebHook for Clue Notifications, separate from any other WebHooks.", section = clueConfig,
+			position = 30)
+	default boolean clueWebHookToggle ()
+	{
+		return false;
+	}
+
+	@ConfigItem (keyName = "clueWebHook", name = "Clue WebHook",
+			description = "Secondary WebHook for Clues specifically.", section = clueConfig, position = 31)
+	String clueWebHook ();
+
 @ConfigItem (keyName = "includePets", name = "Send Pet Notifications",
              description = "Send messages when you receive a pet.", section = petConfig, position = 31)
 default boolean setPets () {return true;}
@@ -262,6 +322,18 @@ default boolean sendPetScreenshot ()
 	{
 	return true;
 	}
+
+	@ConfigItem (keyName = "petWebHookToggle", name = "Separate Pet WebHook?",
+			description = "Use a custom WebHook for Pet Notifications, separate from any other WebHooks.", section = petConfig,
+			position = 34)
+	default boolean petWebHookToggle ()
+	{
+		return false;
+	}
+
+	@ConfigItem (keyName = "petWebHook", name = "Pet WebHook",
+			description = "Secondary WebHook for Pets specifically.", section = petConfig, position = 35)
+	String petWebHook ();
 
 @ConfigItem (keyName = "includeCollectionLogs", name = "Send Collection Log Notifications",
              description = "Send messages when you receive a collection log entry.", section = collectionLogConfig,
@@ -279,6 +351,17 @@ default boolean sendCollectionLogScreenshot ()
 	{
 	return true;
 	}
+	@ConfigItem (keyName = "logWebHookToggle", name = "Separate Collection Log WebHook?",
+			description = "Use a custom WebHook for Collection Log Notifications, separate from any other WebHooks.", section = collectionLogConfig,
+			position = 38)
+	default boolean logWebHookToggle ()
+	{
+		return false;
+	}
+
+	@ConfigItem (keyName = "logWebHook", name = "Collection Log WebHook",
+			description = "Secondary WebHook for Collection Log specifically.", section = collectionLogConfig, position = 39)
+	String logWebHook ();
 
 @ConfigItem (keyName = "customField", name = "Custom Field Title", description = "", position = 38,
              section = valuableLootSection)
