@@ -82,8 +82,7 @@ import java.util.regex.Pattern;
 import static com.discordnotificationsaio.ApiTools.getItemRarity;
 import static com.discordnotificationsaio.ApiTools.getWikiIcon;
 import static net.runelite.api.widgets.WidgetID.QUEST_COMPLETED_GROUP_ID;
-import static net.runelite.http.api.RuneLiteAPI.GSON;
-
+import com.google.gson.Gson;
 @Slf4j
 @PluginDescriptor (name = "Discord Notifications/Split Tracker")
 public class DiscordNotificationsAIOPlugin extends Plugin {
@@ -161,6 +160,9 @@ private NavigationButton navButton;
 
 @Inject
 private static OkHttpClient okHttpClient;
+
+@Inject
+private static Gson gson;
 
 public DiscordNotificationsAIOPlugin () throws IOException {}
 
@@ -1397,7 +1399,7 @@ private void sendNonLootWebhook ( NonLootWebhookBody discordWebhookBody, boolean
 		HttpUrl url = HttpUrl.parse( configUrl );
 		MultipartBody.Builder requestBodyBuilder = new MultipartBody.Builder().setType( MultipartBody.FORM )
 		                                                                      .addFormDataPart( "payload_json",
-				                                                                      GSON.toJson(
+																					  gson.toJson(
 						                                                                      discordWebhookBody ) );
 		
 		if ( sendScreenshot )

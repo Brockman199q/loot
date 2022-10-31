@@ -5,7 +5,7 @@ import com.discordnotificationsaio.rarity.Monster;
 import com.discordnotificationsaio.wiki.WikiItem;
 import com.discordnotificationsaio.wiseoldman.Groups;
 
-import static net.runelite.http.api.RuneLiteAPI.GSON;
+import com.google.gson.Gson;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
@@ -29,6 +29,9 @@ public class ApiTools {
 
 	@Inject
 	private static OkHttpClient client;
+
+	@Inject
+	private static Gson gson;
 
 public static String getWikiIcon ( String itemName ) throws IOException, InterruptedException
 	{
@@ -57,7 +60,7 @@ public static String getWikiIcon ( String itemName ) throws IOException, Interru
 				
 					if ( responseBody.contains( "source" ) )
 						{
-						WikiItem wikiItem = GSON.fromJson( responseBody, WikiItem.class );
+						WikiItem wikiItem = gson.fromJson( responseBody, WikiItem.class );
 //						System.out.println(wikiItem.getQuery().getPages().get( 0 ).getThumbnail().getSource());
 						String wikiIcon = wikiItem.getQuery().getPages().get( 0 ).getThumbnail().getSource();
 						icon.complete( wikiIcon );
@@ -129,7 +132,7 @@ public static String getClanName ( int groupId ) throws IOException, Interrupted
 		return null;
 		}
 //        System.out.println(responseBody);
-	Groups resJson = GSON.fromJson( responseBody, Groups.class );
+	Groups resJson = gson.fromJson( responseBody, Groups.class );
 //        System.out.println(resJson.getName());
 	return resJson.getName();
 	}
