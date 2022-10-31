@@ -127,8 +127,6 @@ public Client client;
 @Inject
 public DiscordNotificationsAIOConfig config;
 @Inject
-public OkHttpClient okHttpClient;
-@Inject
 public KeyManager keyManager;
 // TODO: Include kc for the other notification types too
 // - Collection log entries
@@ -160,6 +158,9 @@ private String playerIconUrl = "";
 private ArrayList<Monster> mobs = parseJsonToPojo();
 private int colorCode = 0;
 private NavigationButton navButton;
+
+@Inject
+private static OkHttpClient okHttpClient;
 
 public DiscordNotificationsAIOPlugin () throws IOException {}
 

@@ -4,12 +4,14 @@ import com.discordnotificationsaio.rarity.Drop;
 import com.discordnotificationsaio.rarity.Monster;
 import com.discordnotificationsaio.wiki.WikiItem;
 import com.discordnotificationsaio.wiseoldman.Groups;
-import com.google.gson.Gson;
+
+import static net.runelite.http.api.RuneLiteAPI.GSON;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.inject.Inject;
 import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,12 +27,14 @@ import java.util.stream.IntStream;
 
 public class ApiTools {
 
+	@Inject
+	private static OkHttpClient client;
+
 public static String getWikiIcon ( String itemName ) throws IOException, InterruptedException
 	{
 	String sURL =
 			"https://oldschool.runescape.wiki/api.php?action=query&format=json&formatversion=2&prop=pageimages&titles=" +
 			itemName.replace( " ", "_" ).replace( "%20", "_" );
-	OkHttpClient client = new OkHttpClient();
 	Request request = new Request.Builder()
 			.url( sURL )
 			.header("User-Agent", "skyhawkgaming/better-discord-loot-logger")
@@ -50,11 +54,10 @@ public static String getWikiIcon ( String itemName ) throws IOException, Interru
 			public void onResponse ( @NotNull Call call, @NotNull Response response ) throws IOException
 				{
 				String responseBody = Objects.requireNonNull( response.body() ).string();
-				Gson g = new Gson();
 				
 					if ( responseBody.contains( "source" ) )
 						{
-						WikiItem wikiItem = g.fromJson( responseBody, WikiItem.class );
+						WikiItem wikiItem = GSON.fromJson( responseBody, WikiItem.class );
 //						System.out.println(wikiItem.getQuery().getPages().get( 0 ).getThumbnail().getSource());
 						String wikiIcon = wikiItem.getQuery().getPages().get( 0 ).getThumbnail().getSource();
 						icon.complete( wikiIcon );
@@ -82,7 +85,6 @@ public static Object[] getWomGroupIds ( String playerName ) throws IOException, 
 	String compUrl =
 			"https://api.wiseoldman.net/players/username/" + playerName.replace( " ", "_" ).replace( "%20", "_" ) +
 			"/competitions";
-	OkHttpClient client = new OkHttpClient();
 	Request request = new Request.Builder().url( compUrl ).build();
 	String responseBody = Objects.requireNonNull( client.newCall( request ).execute().body() ).string();
 	if ( ! responseBody.contains( "groupId" ) )
@@ -101,7 +103,6 @@ public static Object[] getWomGroupIds ( String playerName ) throws IOException, 
 public static Object[] getGroupMembers ( int groupId ) throws IOException, InterruptedException
 	{
 	String groupUrl = "https://api.wiseoldman.net/groups/" + groupId + "/members";
-	OkHttpClient client = new OkHttpClient();
 	Request request = new Request.Builder().url( groupUrl ).build();
 	String responseBody = Objects.requireNonNull( client.newCall( request ).execute().body() ).string();
 	if ( ! responseBody.contains( "username" ) )
@@ -121,7 +122,6 @@ public static Object[] getGroupMembers ( int groupId ) throws IOException, Inter
 public static String getClanName ( int groupId ) throws IOException, InterruptedException
 	{
 	String groupUrl = String.format( "https://api.wiseoldman.net/groups/%d", groupId );
-	OkHttpClient client = new OkHttpClient();
 	Request request = new Request.Builder().url( groupUrl ).build();
 	String responseBody = Objects.requireNonNull( client.newCall( request ).execute().body() ).string();
 	if ( ! responseBody.contains( "name" ) )
@@ -129,8 +129,7 @@ public static String getClanName ( int groupId ) throws IOException, Interrupted
 		return null;
 		}
 //        System.out.println(responseBody);
-	Gson g = new Gson();
-	Groups resJson = g.fromJson( responseBody, Groups.class );
+	Groups resJson = GSON.fromJson( responseBody, Groups.class );
 //        System.out.println(resJson.getName());
 	return resJson.getName();
 	}
