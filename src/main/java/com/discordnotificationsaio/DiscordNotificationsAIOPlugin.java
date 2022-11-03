@@ -163,6 +163,11 @@ private String playerIconUrl = "";
 private ArrayList<Monster> mobs = parseJsonToPojo();
 private int colorCode = 0;
 private NavigationButton navButton;
+private static String itemImageUrl(int itemId)
+	{
+	return "https://static.runelite.net/cache/item/icon/" + itemId + ".png";
+	}
+
 
 public DiscordNotificationsAIOPlugin () throws IOException {}
 
@@ -508,21 +513,14 @@ public void onNpcLootReceived ( NpcLootReceived event ) throws IOException, Inte
 					{
 					dataToPanel( npcName, itemName );
 					AtomicReference<String> thumbnailUrl = new AtomicReference<>( "" );
-					try
+					thumbnailUrl.set( itemImageUrl( itemId ) );
+					String finalRarity = rarity[0];
+					if ( Integer.parseInt( rarity[0] ) >= config.rarityThreshold() )
 						{
-						thumbnailUrl.set( getWikiIcon( itemName ) );
-						String finalRarity = rarity[0];
-						if ( Integer.parseInt( rarity[0] ) >= config.rarityThreshold() )
-							{
-							sendLootMessage( itemName, lastBossKC == - 1 ? null : getKc( playerName, lastBossKill ), npcName,
-									Integer.toString( value ), "Loot Received", thumbnailUrl.get(), "", finalRarity,
-									config.autoLog() );
-							unsetKc( lastBossKill );
-							}
-						}
-					catch (IOException | InterruptedException e)
-						{
-						throw new RuntimeException( e );
+						sendLootMessage( itemName, lastBossKC == - 1 ? null : getKc( playerName, lastBossKill ), npcName,
+								Integer.toString( value ), "Loot Received", thumbnailUrl.get(), "", finalRarity,
+								config.autoLog() );
+						unsetKc( lastBossKill );
 						}
 					});
 					}
@@ -533,14 +531,7 @@ public void onNpcLootReceived ( NpcLootReceived event ) throws IOException, Inte
 				AtomicReference<String> thumbnailUrl = new AtomicReference<>( "" );
 				CompletableFuture.runAsync( () ->
 					{
-					try
-						{
-						thumbnailUrl.set( getWikiIcon( itemName ) );
-						}
-					catch (IOException | InterruptedException e)
-						{
-						throw new RuntimeException( e );
-						}
+					thumbnailUrl.set( itemImageUrl( itemId ) );
 					sendLootMessage( itemName, lastBossKC == - 1 ? null : getKc( playerName, lastBossKill ), npcName,
 							Integer.toString( value ), "Loot Received", thumbnailUrl.get(), "", finalRarity,
 							config.autoLog() );
@@ -598,22 +589,15 @@ public void onLootReceived ( LootReceived lootReceived )
 					{
 					dataToPanel( npcName, itemName );
 					AtomicReference<String> thumbnailUrl = new AtomicReference<>( "" );
-					try
-						{
-						thumbnailUrl.set( getWikiIcon( itemName ) );
-						String finalRarity = rarity[0];
+					thumbnailUrl.set( itemImageUrl( itemId ) );
+					String finalRarity = rarity[0];
 //						if ( Integer.parseInt( rarity[0] ) >= config.rarityThreshold() )
-							{
-							sendLootMessage( itemName, lastBossKC == - 1 ? null : getKc( playerName, lastBossKill ), npcName,
-									Integer.toString( value ), "Loot Received", thumbnailUrl.get(), "", finalRarity,
-									config.autoLog() );
-							unsetKc( lastBossKill );
-							}
-						}
-					catch (IOException | InterruptedException e)
-						{
-						throw new RuntimeException( e );
-						}
+					{
+					sendLootMessage( itemName, lastBossKC == - 1 ? null : getKc( playerName, lastBossKill ), npcName,
+							Integer.toString( value ), "Loot Received", thumbnailUrl.get(), "", finalRarity,
+							config.autoLog() );
+					unsetKc( lastBossKill );
+					}
 					});
 				}
 			else if (!config.includeRarity())
@@ -625,14 +609,7 @@ public void onLootReceived ( LootReceived lootReceived )
 				String finalRarity = rarity[0];
 				CompletableFuture.runAsync( () ->
 					{
-					try
-						{
-						thumbnailUrl.set( getWikiIcon( itemName ) );
-						}
-					catch (IOException | InterruptedException e)
-						{
-						throw new RuntimeException( e );
-						}
+					thumbnailUrl.set( itemImageUrl( itemId ) );
 					sendLootMessage( itemName, lastBossKC == - 1 ? null : getKc( playerName, lastBossKill ), npcName,
 							Integer.toString( value ), "Loot Received", thumbnailUrl.get(), "", finalRarity,
 							config.autoLog() );
@@ -1232,18 +1209,18 @@ public void sendLootMessage ( String itemName, Integer bossKC, String npcName, S
 		fieldsArray.put( splitField );
 		}
 	
-	if ( ! Objects.equals( npcName, "" ) )
-		{
-		try
-			{
-			String npcIconUrl = getWikiIcon( (npcName) );
-			if ( ! npcIconUrl.equals( "" ) ) footerObject.put( "icon_url", npcIconUrl );
-			}
-		catch (IOException | InterruptedException e)
-			{
-			throw new RuntimeException( e );
-			}
-		}
+//	if ( ! Objects.equals( npcName, "" ) )
+//		{
+//		try
+//			{
+//			String npcIconUrl = getWikiIcon( (npcName) );
+//			if ( ! npcIconUrl.equals( "" ) ) footerObject.put( "icon_url", npcIconUrl );
+//			}
+//		catch (IOException | InterruptedException e)
+//			{
+//			throw new RuntimeException( e );
+//			}
+//		}
 	footerString.append( bossKC == null ? "" : " - Kill Count: " + bossKC );
 	
 	footerObject.put( "text", footerString );
@@ -1537,15 +1514,15 @@ public static String getWikiIcon ( String itemName ) throws IOException, Interru
 			@Override
 			public void onFailure ( @NotNull Call call, @NotNull IOException e )
 				{
-				
+
 				icon.completeExceptionally( e );
 				}
-			
+
 			@Override
 			public void onResponse ( @NotNull Call call, @NotNull Response response ) throws IOException
 				{
 				String responseBody = ( response.body() ).string();
-				
+
 				if ( responseBody.contains( "source" ) )
 					{
 					WikiItem wikiItem = g.fromJson( responseBody, WikiItem.class );
@@ -1555,7 +1532,7 @@ public static String getWikiIcon ( String itemName ) throws IOException, Interru
 					response.close();
 					}
 				}
-			
+
 		} );
 		// System.out.println( icon.getNow( "failed https://oldschool.runescape.wiki/images/Coins_10000.png" ) );
 		return icon;
