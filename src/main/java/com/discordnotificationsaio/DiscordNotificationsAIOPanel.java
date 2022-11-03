@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-import static com.discordnotificationsaio.ApiTools.*;
+import static com.discordnotificationsaio.DiscordNotificationsAIOPlugin.*;
 import static java.util.Objects.requireNonNull;
 
 @Slf4j
