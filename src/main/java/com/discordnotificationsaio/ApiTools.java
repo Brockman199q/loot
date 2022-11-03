@@ -18,83 +18,85 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.IntStream;
+import static net.runelite.http.api.RuneLiteAPI.GSON;
+import static net.runelite.http.api.RuneLiteAPI.CLIENT;
 
 public class ApiTools {
 @Inject
-public static Gson g;
-@Inject
-public static OkHttpClient okHttpClient;
+private static OkHttpClient okHttpClient;
 
-public String getWikiIcon ( String itemName ) throws IOException, InterruptedException
-	{
-	String sURL =
-			"https://oldschool.runescape.wiki/api.php?action=query&format=json&formatversion=2&prop=pageimages&titles=" +
-			itemName.replace( " ", "_" ).replace( "%20", "_" );
-	OkHttpClient client = new OkHttpClient();
-	Request request = new Request.Builder()
-			.url( sURL )
-			.header("User-Agent", "skyhawkgaming/better-discord-loot-logger")
-			.build();
-	CompletableFuture<String> icon = new CompletableFuture<>();
-	CompletableFuture.supplyAsync( () ->
-		{
-		okHttpClient.newCall( request ).enqueue( new Callback() {
-			@Override
-			public void onFailure ( @NotNull Call call, @NotNull IOException e )
-				{
+//public String getWikiIcon ( String itemName ) throws IOException, InterruptedException
+//	{
+//	String sURL =
+//			"https://oldschool.runescape.wiki/api.php?action=query&format=json&formatversion=2&prop=pageimages&titles=" +
+//			itemName.replace( " ", "_" ).replace( "%20", "_" );
+//	OkHttpClient client = new OkHttpClient();
+//	Request request = new Request.Builder()
+//			.url( sURL )
+//			.header("User-Agent", "skyhawkgaming/better-discord-loot-logger")
+//			.build();
+//	CompletableFuture<String> icon = new CompletableFuture<>();
+//	CompletableFuture.supplyAsync( () ->
+//		{
+//		okHttpClient.newCall( request ).enqueue( new Callback() {
+//			@Override
+//			public void onFailure ( @NotNull Call call, @NotNull IOException e )
+//				{
+//
+//				icon.completeExceptionally( e );
+//				}
+//
+//			@Override
+//			public void onResponse ( @NotNull Call call, @NotNull Response response ) throws IOException
+//				{
+//				String responseBody = Objects.requireNonNull( response.body() ).string();
+//					if ( responseBody.contains( "source" ) )
+//						{
+//						WikiItem wikiItem = g.fromJson( responseBody, WikiItem.class );
+////						System.out.println(wikiItem.getQuery().getPages().get( 0 ).getThumbnail().getSource());
+//						String wikiIcon = wikiItem.getQuery().getPages().get( 0 ).getThumbnail().getSource();
+//						icon.complete( wikiIcon );
+//						response.close();
+//						}
+//					}
+//
+//		} );
+//		// System.out.println( icon.getNow( "failed https://oldschool.runescape.wiki/images/Coins_10000.png" ) );
+//		return icon;
+//		});
+//	try
+//		{
+//		return icon.get();
+//		}
+//	catch (ExecutionException e)
+//		{
+//		throw new RuntimeException( e );
+//		}
+//	}
 
-				icon.completeExceptionally( e );
-				}
-
-			@Override
-			public void onResponse ( @NotNull Call call, @NotNull Response response ) throws IOException
-				{
-				String responseBody = Objects.requireNonNull( response.body() ).string();
-					if ( responseBody.contains( "source" ) )
-						{
-						WikiItem wikiItem = g.fromJson( responseBody, WikiItem.class );
-//						System.out.println(wikiItem.getQuery().getPages().get( 0 ).getThumbnail().getSource());
-						String wikiIcon = wikiItem.getQuery().getPages().get( 0 ).getThumbnail().getSource();
-						icon.complete( wikiIcon );
-						response.close();
-						}
-					}
-
-		} );
-		// System.out.println( icon.getNow( "failed https://oldschool.runescape.wiki/images/Coins_10000.png" ) );
-		return icon;
-		});
-	try
-		{
-		return icon.get();
-		}
-	catch (ExecutionException e)
-		{
-		throw new RuntimeException( e );
-		}
-	}
-
-
+// TODO: fix wom api methods. Currently failing to grab
 public static Object[] getWomGroupIds ( String playerName ) throws IOException, InterruptedException
 	{
 	String compUrl =
 			"https://api.wiseoldman.net/players/username/" + playerName.replace( " ", "_" ).replace( "%20", "_" ) +
 			"/competitions";
 	Request request = new Request.Builder().url( compUrl ).build();
-	String responseBody = Objects.requireNonNull( okHttpClient.newCall( request ).execute().body() ).string();
+//	OkHttpClient client = new OkHttpClient();
+	String responseBody = (Objects.requireNonNull( CLIENT.newCall( request ).execute().body() )).string();
 	if ( ! responseBody.contains( "groupId" ) )
 		{
 		return null;
 		}
 	JSONArray jsonArray = new JSONArray( responseBody );
-//        System.out.println(responseBody);
-//        System.out.println(Arrays.toString(IntStream.range(0, jsonArray.length())
-//                .mapToObj(index -> ((JSONObject) jsonArray.get(index)).optString("groupId")).distinct().sorted().toArray()));
+        System.out.println(responseBody);
+        System.out.println( Arrays.toString(IntStream.range(0, jsonArray.length())
+                                                     .mapToObj(index -> ((JSONObject) jsonArray.get(index)).optString("groupId")).distinct().sorted().toArray()));
 	return (IntStream.range( 0, jsonArray.length() )
 	                 .mapToObj( index -> ((JSONObject) jsonArray.get( index )).optString( "groupId" ) ).distinct()
 	                 .sorted()).toArray();
@@ -104,7 +106,8 @@ public static Object[] getGroupMembers ( int groupId ) throws IOException, Inter
 	{
 	String groupUrl = "https://api.wiseoldman.net/groups/" + groupId + "/members";
 	Request request = new Request.Builder().url( groupUrl ).build();
-	String responseBody = Objects.requireNonNull( okHttpClient.newCall( request ).execute().body() ).string();
+//	OkHttpClient client = new OkHttpClient();
+	String responseBody = (Objects.requireNonNull( CLIENT.newCall( request ).execute().body() )).string();
 	if ( ! responseBody.contains( "username" ) )
 		{
 		return null;
@@ -123,13 +126,14 @@ public static String getClanName ( int groupId ) throws IOException, Interrupted
 	{
 	String groupUrl = String.format( "https://api.wiseoldman.net/groups/%d", groupId );
 	Request request = new Request.Builder().url( groupUrl ).build();
-	String responseBody = Objects.requireNonNull( okHttpClient.newCall( request ).execute().body() ).string();
+//	OkHttpClient client = new OkHttpClient();
+	String responseBody = (Objects.requireNonNull( CLIENT.newCall( request ).execute().body() )).string();
 	if ( ! responseBody.contains( "name" ) )
 		{
 		return null;
 		}
 //        System.out.println(responseBody);
-	Groups resJson = g.fromJson( responseBody, Groups.class );
+	Groups resJson = GSON.fromJson( responseBody, Groups.class );
 //        System.out.println(resJson.getName());
 	return resJson.getName();
 	}
