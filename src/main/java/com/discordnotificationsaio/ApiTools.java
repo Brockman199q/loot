@@ -80,7 +80,7 @@ private static OkHttpClient okHttpClient;
 //		}
 //	}
 
-// TODO: fix wom api methods. Currently failing to grab
+// TODO: fix wom api methods. Currently failing to grab clan names when using injected okhttpclient
 public static Object[] getWomGroupIds ( String playerName ) throws IOException, InterruptedException
 	{
 	String compUrl =
@@ -94,9 +94,9 @@ public static Object[] getWomGroupIds ( String playerName ) throws IOException, 
 		return null;
 		}
 	JSONArray jsonArray = new JSONArray( responseBody );
-        System.out.println(responseBody);
-        System.out.println( Arrays.toString(IntStream.range(0, jsonArray.length())
-                                                     .mapToObj(index -> ((JSONObject) jsonArray.get(index)).optString("groupId")).distinct().sorted().toArray()));
+//	System.out.println(responseBody);
+//	System.out.println( Arrays.toString(IntStream.range(0, jsonArray.length())
+//	                                             .mapToObj(index -> ((JSONObject) jsonArray.get(index)).optString("groupId")).distinct().sorted().toArray()));
 	return (IntStream.range( 0, jsonArray.length() )
 	                 .mapToObj( index -> ((JSONObject) jsonArray.get( index )).optString( "groupId" ) ).distinct()
 	                 .sorted()).toArray();
@@ -137,7 +137,7 @@ public static String getClanName ( int groupId ) throws IOException, Interrupted
 //        System.out.println(resJson.getName());
 	return resJson.getName();
 	}
-	
+
 
 public static String getItemRarity (ArrayList<Monster> mobs, String npcName, String itemName) throws IOException
 	{
@@ -154,5 +154,5 @@ public static String getItemRarity (ArrayList<Monster> mobs, String npcName, Str
 	if (rarity[0] == null) return "";
 	return rarity[0];
 	}
-
+	
 }
