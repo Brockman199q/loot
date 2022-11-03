@@ -80,7 +80,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.discordnotificationsaio.ApiTools.getItemRarity;
-import static com.discordnotificationsaio.ApiTools.getWikiIcon;
 import static net.runelite.api.widgets.WidgetID.QUEST_COMPLETED_GROUP_ID;
 import static net.runelite.http.api.RuneLiteAPI.GSON;
 
@@ -1206,17 +1205,17 @@ public void sendLootMessage ( String itemName, Integer bossKC, String npcName, S
 		}
 	
 	if ( ! Objects.equals( npcName, "" ) )
-		{
-		try
-			{
-			String npcIconUrl = ApiTools.getWikiIcon( (npcName) );
-			if ( ! npcIconUrl.equals( "" ) ) footerObject.put( "icon_url", npcIconUrl );
-			}
-		catch (IOException | InterruptedException e)
-			{
-			throw new RuntimeException( e );
-			}
-		}
+//		{
+//		try
+//			{
+//			String npcIconUrl = ApiTools.getWikiIcon( (npcName) );
+//			if ( ! npcIconUrl.equals( "" ) ) footerObject.put( "icon_url", npcIconUrl );
+//			}
+//		catch (IOException | InterruptedException e)
+//			{
+//			throw new RuntimeException( e );
+//			}
+//		}
 	footerString.append( bossKC == null ? "" : " - Kill Count: " + bossKC );
 	
 	footerObject.put( "text", footerString );

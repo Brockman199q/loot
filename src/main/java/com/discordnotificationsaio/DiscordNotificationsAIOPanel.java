@@ -575,9 +575,11 @@ public void submitLoot ( JTextField splitValue, JTextField splitMembers, JTextFi
 					{rarity = Objects.requireNonNull( getItemRarity( mobs, npcName.getText(), itemName.getText() ) );}
 				else {rarity = "";}
 				plugin.sendLootMessage( itemName.getText(), null, npcName.getText(), splitValue.getText(),
-						notificationType, getWikiIcon( itemName.getText() ), splitMembers.getText(), rarity, false );
+						notificationType,
+//						getWikiIcon( itemName.getText() )
+						"", splitMembers.getText(), rarity, false );
 				}
-			catch (IOException | InterruptedException ex)
+			catch (IOException ex)
 				{
 				throw new RuntimeException( ex );
 				}
