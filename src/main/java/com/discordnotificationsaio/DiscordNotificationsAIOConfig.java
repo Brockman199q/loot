@@ -270,7 +270,7 @@ default boolean setCollectionLogs () {return true;}
 
 @ConfigItem (keyName = "collectionLogMessage", name = "Collection Log Message",
              description = "Message to send to Discord on Collection Log", section = collectionLogConfig, position = 36)
-default String collectionLogMessage () {return "$name just received a new collection log item: **$itemName!**";}
+default String collectionLogMessage () {return "$name just received a new collection log item: $itemName!";}
 
 @ConfigItem (keyName = "sendCollectionLogScreenshot", name = "Include Collection Log screenshots",
              description = "Include a screenshot with the discord notification when you receive a collection log item.",
